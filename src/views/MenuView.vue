@@ -7,6 +7,7 @@ import ProductoFormDialog from '../components/ProductoFormDialog.vue'
 
 const $q = useQuasar()
 const menu = useMenuStore()
+const disponibles = computed(() => menu.productos.length - menu.agotados.length)
 
 const busqueda = ref('')
 const categoriaActiva = ref('todas')
@@ -93,7 +94,7 @@ function eliminarProducto(producto) {
       <div>
         <h1 class="titulo text-h5 q-my-none">Menú</h1>
         <p class="text-body2 texto-suave q-mt-xs q-mb-none">
-          {{ menu.productos.length }} productos, {{ menu.agotados.length }} agotados
+          {{ menu.productos.length }} productos, {{ disponibles }} disponibles, {{ menu.agotados.length }} agotados
         </p>
       </div>
       <q-space />
