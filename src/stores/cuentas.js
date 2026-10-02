@@ -126,6 +126,6 @@ export const useCuentasStore = defineStore(
       cancelar,
       reiniciar
     }
-  },
-  { persist: { key: 'cafeteria-cuentas' } }
+  }
 )
+

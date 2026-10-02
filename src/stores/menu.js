@@ -55,6 +55,6 @@ export const useMenuStore = defineStore(
             productos, categorias, agotados, porId, agregar,
             actualizar, alternarDisponibilidad, eliminar
         }
-    },
-    { persist: { key: 'cafeteria-menu' } }
+    }
 )
+
