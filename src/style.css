@@ -1,6 +1,6 @@
-body {
-    background: #eef0ec;
-    color: #1d2522;
+﻿body {
+    background: linear-gradient(180deg, #fdf6ec 0%, #f7ead9 100%);
+    color: #3a2c22;
     font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
 }
@@ -10,31 +10,31 @@ button, input, textarea, select {
 }
 
 .bg-primary {
-    background: #1f4d3f;
+    background: linear-gradient(135deg, #8b5a2b 0%, #6f4518 100%);
 }
 
 .text-primary {
-    color: #1f4d3f;
+    color: #6f4518;
 }
 
 .bg-secondary {
-    background: #f4c95d;
+    background: #f6a821;
 }
 
 .text-secondary {
-    color: #f4c95d;
+    color: #e08600;
 }
 
 .bg-negative {
-    background: #b3372f;
+    background: #d1495b;
 }
 
 .text-negative {
-    color: #b3372f;
+    color: #d1495b;
 }
 
 .bg-positive {
-    background: #2e7d4f;
+    background: #4c9a2a;
 }
 
 .titulo {
@@ -63,13 +63,13 @@ button, input, textarea, select {
 .vacio {
     text-align: center;
     padding: 40px 16px;
-    border: 2px dashed #d5dbd4;
+    border: 2px dashed #ead9c2;
     border-radius: 16px;
     background: #ffffff;
 }
 
 .texto-suave {
-    color: #55625b;
+    color: #8a7263;
 }
 
 .filtros {
@@ -84,7 +84,7 @@ button, input, textarea, select {
 }
 
 .categorias {
-    border-bottom: 1px solid #d5dbd4;
+    border-bottom: 1px solid #ead9c2;
 }
 
 .acciones {
@@ -118,14 +118,22 @@ button, input, textarea, select {
 
 .mesa--libre {
     background: #ffffff;
-    border: 2px dashed #8ea79a;
-    color: #1d2622;
+    border: 2px dashed #c9a06a;
+    color: #3a2c22;
+    box-shadow: 0 2px 8px rgba(139, 90, 43, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mesa--libre:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(139, 90, 43, 0.16);
 }
 
 .mesa--ocupada {
-    background: #f4c95d;
-    border: 2px solid #d8a92d;
-    color: #2a2008;
+    background: linear-gradient(135deg, #ffd873 0%, #ffb63d 100%);
+    border: 2px solid #e8a013;
+    color: #4a2f08;
+    box-shadow: 0 4px 14px rgba(232, 160, 19, 0.35);
 }
 
 .mesa__cabecera {
@@ -158,13 +166,13 @@ button, input, textarea, select {
 }
 
 .mesa--libre .estado {
-    background: #e0ece6;
-    color: #1f4d3f;
+    background: #fbe3b3;
+    color: #6f4518;
 }
 
 .mesa--ocupada .estado {
-    background: #b9b9b8;
-    color: #1f4d3f;
+    background: #f2d9a4;
+    color: #6f4518;
 }
 
 .mesa__total {
@@ -179,7 +187,7 @@ button, input, textarea, select {
 }
 
 .mesa--libre .mesa__detalle {
-    color: #55625b;
+    color: #8a7263;
 }
 
 .contenido {
@@ -206,17 +214,24 @@ button, input, textarea, select {
     padding: 12px;
     text-align: left;
     font: inherit;
-    color: #1d2622;
+    color: #3a2c22;
     background: #ffffff;
-    border: 1px solid #d5dbd4;
+    border: 1px solid #ead9c2;
     border-radius: 12px;
     cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.producto:hover:not(.producto--agotado) {
+    transform: translateY(-3px);
+    border-color: #f6a821;
+    box-shadow: 0 6px 16px rgba(139, 90, 43, 0.18);
 }
 
 .producto--agotado {
-    background: #e4e7e3;
+    background: #f1e4d2;
     border-style: dashed;
-    color: #55625b;
+    color: #8a7263;
     cursor: not-allowed;
 }
 
@@ -251,14 +266,14 @@ button, input, textarea, select {
 
 .cuenta {
     background: #ffffff;
-    border: 1px solid #d5dbd4;
+    border: 1px solid #ead9c2;
     border-radius: 16px;
     padding: 16px 20px 20px;
 }
 
 .cuenta__cabecera {
     padding-bottom: 12px;
-    border-bottom: 2px solid #1f4d3f;
+    border-bottom: 2px solid #6f4518;
 }
 
 .cuenta__vacia {
@@ -277,7 +292,7 @@ button, input, textarea, select {
     grid-template-columns: 1fr auto;
     gap: 4px 12px;
     padding: 12px 0;
-    border-bottom: 1px solid #d5dbd4;
+    border-bottom: 1px solid #ead9c2;
 }
 
 .linea__total {
@@ -296,7 +311,7 @@ button, input, textarea, select {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    border: 1px solid #d5dbd4;
+    border: 1px solid #ead9c2;
     border-radius: 999px;
     padding: 0 4px;
 }
@@ -319,7 +334,7 @@ button, input, textarea, select {
     font: inherit;
     font-size: 0.875rem;
     text-align: left;
-    color: #55625b;
+    color: #8a7263;
     cursor: pointer;
 }
 
@@ -339,7 +354,7 @@ button, input, textarea, select {
 }
 
 .selector {
-    border: 1px solid #d5dbd4;
+    border: 1px solid #ead9c2;
     border-radius: 8px;
 }
 
@@ -370,9 +385,10 @@ button, input, textarea, select {
 
 .indicador {
     background: #ffffff;
-    border: 1px solid #d5dbd4;
+    border: 1px solid #ead9c2;
     border-radius: 12px;
     padding: 16px;
+    box-shadow: 0 2px 8px rgba(139, 90, 43, 0.08);
 }
 
 .indicador dt {
@@ -395,17 +411,18 @@ button, input, textarea, select {
 .indicador__nota {
     margin-top: 2px;
     font-size: 0.8125rem;
-    color: #55625b;
+    color: #8a7263;
 }
 
 .indicador--principal {
-    background: #1f4d3f;
-    border-color: #1f4d3f;
+    background: linear-gradient(135deg, #8b5a2b 0%, #6f4518 100%);
+    border-color: #6f4518;
     color: #ffffff;
+    box-shadow: 0 6px 16px rgba(111, 69, 24, 0.35);
 }
 
 .indicador--principal .indicador__nota {
-    color: #d3e6dc;
+    color: #f6d9a8;
 }
 
 .columnas {
@@ -417,9 +434,10 @@ button, input, textarea, select {
 
 .bloque {
     background: #ffffff;
-    border: 1px solid #d5dbd4;
+    border: 1px solid #ead9c2;
     border-radius: 12px;
     padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(139, 90, 43, 0.08);
 }
 
 .metodos, .vendidos {
@@ -438,7 +456,7 @@ button, input, textarea, select {
     gap: 12px;
     align-items: baseline;
     padding: 8px 0;
-    border-bottom: 1px solid #d5dbd4;
+    border-bottom: 1px solid #ead9c2;
 }
 
 .vendidos__nombre {
@@ -451,7 +469,7 @@ button, input, textarea, select {
 }
 
 .lado {
-    color: #1d2622;
+    color: #3a2c22;
 }
 
 .detalle {
@@ -474,7 +492,7 @@ button, input, textarea, select {
 .pago {
     margin: 0;
     padding-top: 8px;
-    border-top: 1px solid #d5dbd4;
+    border-top: 1px solid #ead9c2;
 }
 
 .pago div {
@@ -484,7 +502,7 @@ button, input, textarea, select {
 }
 
 .pago dt {
-    color: #55625b;
+    color: #8a7263;
 }
 
 .pago dd {
@@ -493,11 +511,11 @@ button, input, textarea, select {
 }
 
 .aviso {
-    background: #fbeab9;
+    background: #ffe9b8;
 }
 
 .tabs-vista {
-    border-bottom: 1px solid #d5dbd4;
+    border-bottom: 1px solid #ead9c2;
     margin-bottom: 20px;
 }
 
@@ -511,8 +529,8 @@ button, input, textarea, select {
 }
 
 .menu-activo {
-    background: #e0ece6;
-    color: #1f4d3f;
+    background: #fbe3b3;
+    color: #6f4518;
     font-weight: 600;
 }
 
@@ -540,7 +558,7 @@ button, input, textarea, select {
 
 .indicador-inicio {
     background: #ffffff;
-    border: 1px solid #d5dbd4;
+    border: 1px solid #ead9c2;
     border-radius: 12px;
     padding: 16px;
     display: flex;
@@ -599,14 +617,14 @@ button, input, textarea, select {
     justify-content: center;
     justify-content: center;
     gap: 12px;
-    background: rgba(238, 240, 236, 0.92);
+    background: rgba(253, 246, 236, 0.92);
 }
 
 .overlay-carga__texto {
     margin: 0;
     font-family: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
     font-weight: 600;
-    color: #1d2622;
+    color: #3a2c22;
 }
 
 @media (max-width: 900px) {
