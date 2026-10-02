@@ -37,4 +37,5 @@ export const useMesasStore = defineStore(
 
     return { mesas, ordenadas, siguienteNumero, porId, existeNumero, agregar, actualizar, eliminar }
   },
+  { persist: true }
 )

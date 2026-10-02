@@ -36,5 +36,6 @@ export const useCierresStore = defineStore(
         return {
             historial, jornadaInicio, resumenActual, puedeCerrar, cerrarDia
         }
-    }
+    },
+    { persist: true }
 )

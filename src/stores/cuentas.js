@@ -123,4 +123,5 @@ export const useCuentasStore = defineStore(
       reiniciar
     }
   },
+  { persist: true }
 )
