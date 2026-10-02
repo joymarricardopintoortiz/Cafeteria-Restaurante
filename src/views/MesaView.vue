@@ -6,6 +6,7 @@ import { useMesasStore } from '../stores/mesas.js'
 import { useMenuStore } from '../stores/menu.js'
 import { useCuentasStore } from '../stores/cuentas.js'
 import { formatoMoneda } from '../utils/format.js'
+import { iconoCategoria } from '../utils/categorias.js'
 import ProductoCard from '../components/ProductoCard.vue'
 import CuentaPanel from '../components/CuentaPanel.vue'
 import CobroDialog from '../components/CobroDialog.vue'
@@ -136,7 +137,7 @@ function cancelarCuenta() {
               v-for="opcion in opcionesCategoria"
               :key="opcion.value"
               :name="opcion.value"
-              :label="opcion.label"
+              :label="`${opcion.value === 'todas' ? '🍴' : iconoCategoria(opcion.value)} ${opcion.label}`"
             />
           </q-tabs>
         </div>

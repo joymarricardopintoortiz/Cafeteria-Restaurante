@@ -10,7 +10,11 @@
           aria-label="Abrir o cerrar el menú de navegación"
           @click="alternarDrawer"
         />
-        <q-icon name="local_cafe" size="sm" class="q-ml-md q-mr-sm" />
+        <svg class="logo-taza q-ml-md q-mr-sm" viewBox="0 0 24 24" width="30" height="30" fill="none" aria-hidden="true">
+          <path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9z" fill="#fff4df"/>
+          <path d="M16 10h2.5a2.5 2.5 0 0 1 0 5H16" stroke="#fff4df" stroke-width="1.6"/>
+          <path d="M8 3v3M12 3v3" stroke="#ffe3b3" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
         <q-toolbar-title class="titulo">Cafetería</q-toolbar-title>
       </q-toolbar>
     </q-header>

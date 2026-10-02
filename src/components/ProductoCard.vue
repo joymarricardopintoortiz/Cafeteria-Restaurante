@@ -1,5 +1,6 @@
 <script setup>
 import { formatoMoneda } from '../utils/format.js'
+import { iconoCategoria } from '../utils/categorias.js'
 
 defineProps({
   producto: { type: Object, required: true },
@@ -23,7 +24,7 @@ defineEmits(['agregar'])
     @click="$emit('agregar', producto)"
   >
     <span class="producto__cabecera">
-      <span class="producto__categoria">{{ producto.categoria }}</span>
+      <span class="producto__categoria">{{ iconoCategoria(producto.categoria) }} {{ producto.categoria }}</span>
       <q-badge v-if="cantidad" color="primary" rounded :label="`×${cantidad}`" />
     </span>
     <span class="producto__nombre">{{ producto.nombre }}</span>
