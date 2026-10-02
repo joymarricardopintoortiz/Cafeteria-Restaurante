@@ -2,13 +2,17 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { crearId } from '../utils/id.js'
 import { subtotalCuenta } from '../utils/cuentas.js'
+import { useMesasStore } from './mesas.js'
 
 export const useCuentasStore = defineStore(
   'cuentas',
   () => {
     const cuentas = ref([])
 
-    const abiertas = computed(() => cuentas.value.filter((c) => c.estado === 'abierta'))
+    const mesasStore = useMesasStore()
+    const abiertas = computed(() =>
+      cuentas.value.filter((c) => c.estado === 'abierta' && mesasStore.porId(c.mesaId))
+    )
     const cerradas = computed(() =>
       cuentas.value.filter((c) => c.estado !== 'abierta').sort((a, b) => b.cerradaAt - a.cerradaAt)
     )
