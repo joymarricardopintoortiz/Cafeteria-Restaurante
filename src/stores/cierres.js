@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+﻿import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { crearId } from '../utils/id'
 import { construirResumen } from '../utils/cuentas'
@@ -37,5 +37,5 @@ export const useCierresStore = defineStore(
             historial, jornadaInicio, resumenActual, puedeCerrar, cerrarDia
         }
     },
-    { persist: true }
+    { persist: { key: 'cafeteria-cierres' } }
 )

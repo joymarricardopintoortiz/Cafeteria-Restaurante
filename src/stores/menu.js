@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+﻿import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { crearId } from '../utils/id'
 
@@ -56,5 +56,5 @@ export const useMenuStore = defineStore(
             actualizar, alternarDisponibilidad, eliminar
         }
     },
-    { persist: true }
+    { persist: { key: 'cafeteria-menu' } }
 )

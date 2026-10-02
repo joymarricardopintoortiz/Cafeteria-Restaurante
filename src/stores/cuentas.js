@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+﻿import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { crearId } from '../utils/id.js'
 import { subtotalCuenta } from '../utils/cuentas.js'
@@ -127,5 +127,5 @@ export const useCuentasStore = defineStore(
       reiniciar
     }
   },
-  { persist: true }
+  { persist: { key: 'cafeteria-cuentas' } }
 )

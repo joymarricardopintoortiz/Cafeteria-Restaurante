@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+﻿import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { crearId } from '../utils/id.js'
 
@@ -37,5 +37,5 @@ export const useMesasStore = defineStore(
 
     return { mesas, ordenadas, siguienteNumero, porId, existeNumero, agregar, actualizar, eliminar }
   },
-  { persist: true }
+  { persist: { key: 'cafeteria-mesas' } }
 )
