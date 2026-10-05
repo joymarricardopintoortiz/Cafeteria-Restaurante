@@ -17,6 +17,7 @@ const mesaEnEdicion = ref(null)
 
 const libres = () => mesas.ordenadas.filter((mesa) => !cuentas.cuentaAbiertaDe(mesa.id) && mesa.disponibilidad !== 'fuera de servicio')
 const ocupadas = () => mesas.ordenadas.filter((mesa) => cuentas.cuentaAbiertaDe(mesa.id))
+const fueraDeServicio = () => mesas.ordenadas.filter((mesa) => !cuentas.cuentaAbiertaDe(mesa.id) && mesa.disponibilidad === 'fuera de servicio')
 
 function nuevaMesa() {
   mesaEnEdicion.value = null
@@ -49,7 +50,8 @@ function guardarMesa(datos) {
       <div>
         <h1 class="titulo text-h5 q-my-none">Salón</h1>
         <p class="text-body2 texto-suave q-mt-xs q-mb-none">
-          {{ ocupadas().length }} de {{ mesas.ordenadas.length }} mesas ocupadas
+          {{ ocupadas().length + fueraDeServicio().length }} de {{ mesas.ordenadas.length }} mesas ocupadas
+          <span v-if="fueraDeServicio().length">({{ fueraDeServicio().length }} fuera de servicio)</span>
         </p>
       </div>
       <q-space />

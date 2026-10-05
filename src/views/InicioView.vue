@@ -23,7 +23,12 @@ const saludo = computed(() => {
 const fechaHoy = formatoFecha(ahora.getTime())
 
 const mesasOcupadas = computed(() => cuentasStore.abiertas.length)
-const mesasLibres = computed(() => mesasStore.mesas.length - mesasOcupadas.value)
+const mesasFuera = computed(
+  () => mesasStore.mesas.filter((m) => m.disponibilidad === 'fuera de servicio').length
+)
+const mesasLibres = computed(
+  () => mesasStore.mesas.length - mesasOcupadas.value - mesasFuera.value
+)
 const productosDisponibles = computed(
   () => menuStore.productos.filter((p) => p.disponible).length
 )
@@ -33,6 +38,7 @@ const ventasHoy = computed(() => cierresStore.resumenActual.cuentasPagadas)
 const indicadores = computed(() => [
   { valor: mesasLibres.value, etiqueta: 'Mesas libres', icono: 'event_seat', color: 'positive' },
   { valor: mesasOcupadas.value, etiqueta: 'Mesas ocupadas', icono: 'groups', color: 'warning' },
+  { valor: mesasFuera.value, etiqueta: 'Mesas fuera de servicio', icono: 'block', color: 'negative' },
   { valor: productosDisponibles.value, etiqueta: 'Productos disponibles', icono: 'restaurant_menu', color: 'primary' },
   { valor: ventasHoy.value, etiqueta: 'Cuentas cobradas hoy', icono: 'point_of_sale', color: 'secondary' }
 ])
@@ -43,7 +49,7 @@ const secciones = computed(() => [
     icono: 'table_restaurant',
     descripcion:
       'Muestra el estado de cada mesa del local: cuáles están libres y cuáles ocupadas, con el total que lleva consumido cada una y el tiempo que llevan abiertas.',
-    detalle: `${mesasOcupadas.value} de ${mesasStore.mesas.length} mesas ocupadas ahora`
+    detalle: `${mesasOcupadas.value + mesasFuera.value} de ${mesasStore.mesas.length} mesas ocupadas ahora (${mesasFuera.value} fuera de servicio)`
   },
   {
     nombre: 'Menú',
