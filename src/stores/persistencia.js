@@ -1,6 +1,4 @@
-﻿// Plugin de persistencia (Pinia): guarda el $state en localStorage y lo restaura.
-// Se usa una clave explícita por store: `cafeteria-<id>`.
-const CLAVES = {
+﻿const CLAVES = {
   mesas: 'cafeteria-mesas',
   menu: 'cafeteria-menu',
   cuentas: 'cafeteria-cuentas',
@@ -20,9 +18,6 @@ export function persistenciaPlugin() {
       console.warn(`No se pudo restaurar "${clave}":`, error)
     }
 
-    // Siempre guarda el estado actual al iniciar: si faltaba la clave,
-    // persiste el estado inicial (mesas por defecto, etc.) para que
-    // los demás stores puedan referenciarla después.
     try {
       localStorage.setItem(clave, JSON.stringify(store.$state))
     } catch (error) {

@@ -562,6 +562,7 @@ button, input, textarea, select {
 }
 
 .cabecera-inicio--centrada {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -569,8 +570,75 @@ button, input, textarea, select {
     background: linear-gradient(135deg, #fff4df 0%, #ffe3b3 100%);
     border: 1px solid #f2cf8f;
     border-radius: 20px;
-    padding: 28px 24px;
+    padding: 32px 24px;
     box-shadow: 0 6px 20px rgba(139, 90, 43, 0.12);
+}
+
+.decoracion-inicio {
+    position: absolute;
+    width: clamp(56px, 5vw, 84px);
+    height: auto;
+    pointer-events: none;
+    user-select: none;
+    display: none;
+}
+
+.decoracion-inicio--izquierda {
+    left: 24px;
+}
+
+.decoracion-inicio--derecha {
+    right: 24px;
+}
+
+.decoracion-inicio--arriba {
+    top: 24px;
+}
+
+.decoracion-inicio--centro {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.decoracion-inicio--abajo {
+    bottom: 24px;
+}
+
+@media (min-width: 1280px) {
+    .decoracion-inicio {
+        display: block;
+    }
+}
+
+.icono-inicio {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    margin-bottom: 16px;
+    background: #fffdf8;
+    border: 1px solid #f2cf8f;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(139, 90, 43, 0.14);
+}
+
+.kicker-inicio {
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #8b5a2b;
+}
+
+.regla-inicio {
+    width: min(320px, 80%);
+    height: 9px;
+    margin-top: 18px;
+    background:
+        radial-gradient(circle at 50% 50%, #e08600 0 4px, transparent 4.5px),
+        linear-gradient(#d9b57a, #d9b57a) left center / 42% 1px no-repeat,
+        linear-gradient(#d9b57a, #d9b57a) right center / 42% 1px no-repeat;
 }
 
 .intro-inicio {
