@@ -69,8 +69,8 @@ function alternarDisponibilidad(producto) {
   $q.notify({
     type: producto.disponible ? 'positive' : 'warning',
     message: producto.disponible
-      ? `${producto.nombre} marcado como agotado`
-      : `${producto.nombre} disponible de nuevo`
+      ? `${producto.nombre} disponible de nuevo`
+      : `${producto.nombre} marcado como agotado`
   })
 }
 
