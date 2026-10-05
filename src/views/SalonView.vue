@@ -15,11 +15,16 @@ const ahora = useAhora()
 const dialogoAbierto = ref(false)
 const mesaEnEdicion = ref(null)
 
-const libres = () => mesas.ordenadas.filter((mesa) => !cuentas.cuentaAbiertaDe(mesa.id))
+const libres = () => mesas.ordenadas.filter((mesa) => !cuentas.cuentaAbiertaDe(mesa.id) && mesa.disponibilidad !== 'fuera de servicio')
 const ocupadas = () => mesas.ordenadas.filter((mesa) => cuentas.cuentaAbiertaDe(mesa.id))
 
 function nuevaMesa() {
   mesaEnEdicion.value = null
+  dialogoAbierto.value = true
+}
+
+function editarMesa(mesa) {
+  mesaEnEdicion.value = mesa
   dialogoAbierto.value = true
 }
 
@@ -68,6 +73,7 @@ function guardarMesa(datos) {
         :mesa="mesa"
         :cuenta="cuentas.cuentaAbiertaDe(mesa.id)"
         :ahora="ahora"
+        @editar="editarMesa"
       />
     </div>
 

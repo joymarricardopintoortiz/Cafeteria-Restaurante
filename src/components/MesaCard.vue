@@ -9,6 +9,8 @@ const props = defineProps({
   ahora: { type: Number, required: true }
 })
 
+const emit = defineEmits(['editar'])
+
 const ocupada = computed(() => props.cuenta !== null)
 const total = computed(() => (props.cuenta ? subtotalCuenta(props.cuenta) : 0))
 const unidades = computed(() => (props.cuenta ? unidadesCuenta(props.cuenta) : 0))
@@ -34,10 +36,22 @@ const descripcion = computed(() =>
           <div class="mesa__rotulo">Mesa</div>
           <div class="mesa__numero">{{ mesa.numero }}</div>
         </div>
-        <span class="estado">
-          <q-icon :name="ocupada ? 'local_cafe' : 'event_seat'" size="16px" />
-          {{ ocupada ? 'Ocupada' : 'Libre' }}
-        </span>
+        <div class="mesa__acciones-cabecera">
+          <span class="estado">
+            <q-icon :name="ocupada ? 'local_cafe' : 'event_seat'" size="16px" />
+            {{ ocupada ? 'Ocupada' : mesa.disponibilidad === 'fuera de servicio' ? 'Fuera de servicio' : 'Libre' }}
+          </span>
+          <q-btn
+            flat
+            round
+            dense
+            icon="edit"
+            size="sm"
+            color="primary"
+            :aria-label="`Editar mesa ${mesa.numero}`"
+            @click.prevent.stop="emit('editar', mesa)"
+          />
+        </div>
       </div>
 
       <div v-if="ocupada" class="mesa__cuerpo">

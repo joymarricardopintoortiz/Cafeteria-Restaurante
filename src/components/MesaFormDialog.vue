@@ -13,11 +13,13 @@ const emit = defineEmits(['guardar'])
 const mesas = useMesasStore()
 const numero = ref(1)
 const capacidad = ref(4)
+const disponibilidad = ref('disponible')
 
 watch(abierto, (visible) => {
   if (!visible) return
   numero.value = props.mesa?.numero ?? mesas.siguienteNumero
   capacidad.value = props.mesa?.capacidad ?? 4
+  disponibilidad.value = props.mesa?.disponibilidad ?? 'disponible'
 })
 
 const reglasNumero = [
@@ -30,7 +32,7 @@ const reglasCapacidad = [
 ]
 
 function guardar() {
-  emit('guardar', { numero: numero.value, capacidad: capacidad.value })
+  emit('guardar', { numero: numero.value, capacidad: capacidad.value, disponibilidad: disponibilidad.value })
   abierto.value = false
 }
 </script>
@@ -63,6 +65,17 @@ function guardar() {
             label="Capacidad (personas)"
             :rules="reglasCapacidad"
             lazy-rules
+          />
+          <q-select
+            v-model="disponibilidad"
+            outlined
+            emit-value
+            map-options
+            :options="[
+              { label: 'Disponible', value: 'disponible' },
+              { label: 'Fuera de servicio', value: 'fuera de servicio' }
+            ]"
+            label="Disponibilidad"
           />
         </q-card-section>
 

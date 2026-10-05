@@ -9,7 +9,8 @@ export const useMesasStore = defineStore(
       Array.from({ length: 8 }, (_, i) => ({
         id: crearId(),
         numero: i + 1,
-        capacidad: i < 4 ? 2 : 4
+        capacidad: i < 4 ? 2 : 4,
+        disponibilidad: 'disponible'
       }))
     )
 
@@ -22,8 +23,8 @@ export const useMesasStore = defineStore(
     const existeNumero = (numero, ignorarId = null) =>
       mesas.value.some((mesa) => mesa.numero === numero && mesa.id !== ignorarId)
 
-    function agregar({ numero, capacidad }) {
-      mesas.value.push({ id: crearId(), numero, capacidad })
+    function agregar({ numero, capacidad, disponibilidad }) {
+      mesas.value.push({ id: crearId(), numero, capacidad, disponibilidad: disponibilidad || 'disponible' })
     }
 
     function actualizar(id, datos) {

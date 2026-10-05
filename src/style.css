@@ -155,6 +155,13 @@ button, input, textarea, select {
     line-height: 1;
 }
 
+.mesa__acciones-cabecera {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
 .estado {
     display: inline-flex;
     align-items: center;

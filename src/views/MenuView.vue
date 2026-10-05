@@ -74,18 +74,6 @@ function alternarDisponibilidad(producto) {
   })
 }
 
-function eliminarProducto(producto) {
-  $q.dialog({
-    title: 'Eliminar producto',
-    message: `¿Quitar "${producto.nombre}" del menú? Las cuentas ya cobradas no se ven afectadas.`,
-    cancel: { flat: true, label: 'Volver', color: 'primary' },
-    ok: { flat: true, label: 'Eliminar', color: 'negative' },
-    persistent: true
-  }).onOk(() => {
-    menu.eliminar(producto.id)
-    $q.notify({ type: 'info', message: `${producto.nombre} eliminado del menú` })
-  })
-}
 </script>
 
 <template>
@@ -172,15 +160,6 @@ function eliminarProducto(producto) {
             icon="edit"
             :aria-label="`Editar ${scope.row.nombre}`"
             @click="editarProducto(scope.row)"
-          />
-          <q-btn
-            flat
-            round
-            dense
-            icon="delete_outline"
-            color="negative"
-            :aria-label="`Eliminar ${scope.row.nombre}`"
-            @click="eliminarProducto(scope.row)"
           />
         </q-td>
       </template>
