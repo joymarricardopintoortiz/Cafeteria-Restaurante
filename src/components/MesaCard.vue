@@ -12,20 +12,24 @@ const props = defineProps({
 const emit = defineEmits(['editar'])
 
 const ocupada = computed(() => props.cuenta !== null)
+const fueraDeServicio = computed(() => props.mesa.disponibilidad === 'fuera de servicio' && !ocupada.value)
 const total = computed(() => (props.cuenta ? subtotalCuenta(props.cuenta) : 0))
 const unidades = computed(() => (props.cuenta ? unidadesCuenta(props.cuenta) : 0))
 const tiempo = computed(() =>
   props.cuenta ? textoDuracion(minutosDesde(props.cuenta.abiertaAt, props.ahora)) : ''
 )
 const descripcion = computed(() =>
-  ocupada.value
-    ? `Mesa ${props.mesa.numero}, ocupada, ${formatoMoneda(total.value)}`
-    : `Mesa ${props.mesa.numero}, libre, para ${props.mesa.capacidad} personas`
+  fueraDeServicio.value
+    ? `Mesa ${props.mesa.numero}, fuera de servicio, bloqueada`
+    : ocupada.value
+      ? `Mesa ${props.mesa.numero}, ocupada, ${formatoMoneda(total.value)}`
+      : `Mesa ${props.mesa.numero}, libre, para ${props.mesa.capacidad} personas`
 )
 </script>
 
 <template>
   <router-link
+    v-if="!fueraDeServicio || ocupada"
     :to="{ name: 'mesa', params: { id: mesa.id } }"
     class="mesa-link"
     :aria-label="descripcion"
@@ -48,6 +52,7 @@ const descripcion = computed(() =>
             icon="edit"
             size="sm"
             color="primary"
+            :disable="ocupada"
             :aria-label="`Editar mesa ${mesa.numero}`"
             @click.prevent.stop="emit('editar', mesa)"
           />
@@ -68,4 +73,37 @@ const descripcion = computed(() =>
       </div>
     </article>
   </router-link>
+
+  <div v-else class="mesa-link mesa-link--bloqueada" :aria-label="descripcion" aria-disabled="true">
+    <article class="mesa mesa--fuera">
+      <div class="mesa__cabecera">
+        <div>
+          <div class="mesa__rotulo">Mesa</div>
+          <div class="mesa__numero">{{ mesa.numero }}</div>
+        </div>
+        <div class="mesa__acciones-cabecera">
+          <span class="estado">
+            <q-icon name="block" size="16px" />
+            Fuera de servicio
+          </span>
+          <q-btn
+            flat
+            round
+            dense
+            icon="edit"
+            size="sm"
+            color="primary"
+            :disable="ocupada"
+            :aria-label="`Editar mesa ${mesa.numero}`"
+            @click.prevent.stop="emit('editar', mesa)"
+          />
+        </div>
+      </div>
+
+      <div class="mesa__cuerpo">
+        <div class="mesa__detalle">Mesa bloqueada</div>
+        <div class="mesa__detalle">No se puede tomar pedido</div>
+      </div>
+    </article>
+  </div>
 </template>

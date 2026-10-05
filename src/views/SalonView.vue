@@ -24,6 +24,10 @@ function nuevaMesa() {
 }
 
 function editarMesa(mesa) {
+  if (cuentas.cuentaAbiertaDe(mesa.id)) {
+    $q.notify({ type: 'warning', message: `La mesa ${mesa.numero} está ocupada; no se puede editar hasta que esté libre` })
+    return
+  }
   mesaEnEdicion.value = mesa
   dialogoAbierto.value = true
 }

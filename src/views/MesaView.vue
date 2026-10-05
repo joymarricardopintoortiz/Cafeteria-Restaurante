@@ -91,7 +91,16 @@ function cancelarCuenta() {
 </script>
 
 <template>
-  <q-page v-if="mesa" class="pagina">
+  <q-page v-if="mesa && mesa.disponibilidad === 'fuera de servicio' && !cuenta" class="pagina">
+    <div class="vacio">
+      <q-icon name="block" size="48px" color="grey-6" />
+      <p class="text-body1 q-mt-sm q-mb-xs">La mesa {{ mesa.numero }} está fuera de servicio</p>
+      <p class="text-body2 texto-suave q-mb-md">No se puede entrar a esta mesa mientras esté bloqueada.</p>
+      <q-btn unelevated no-caps color="primary" label="Volver al salón" :to="{ name: 'salon' }" />
+    </div>
+  </q-page>
+
+  <q-page v-else-if="mesa" class="pagina">
     <div class="cabecera">
       <q-btn
         flat
