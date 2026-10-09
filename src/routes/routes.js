@@ -7,7 +7,7 @@ const routes = [
     path: '/',
     name: 'inicio',
     component: InicioView,
-    meta: { seccion: 'inicio', titulo: 'Bienvenido' }
+    meta: { seccion: 'inicio', titulo: 'Inicio' }
   },
   {
     path: '/salon',
