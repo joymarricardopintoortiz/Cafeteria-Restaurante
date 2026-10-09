@@ -90,7 +90,6 @@ function guardar() {
             v-model.number="form.precio"
             type="number"
             outlined
-            min="0"
             prefix="$"
             label="Precio"
             :hint="

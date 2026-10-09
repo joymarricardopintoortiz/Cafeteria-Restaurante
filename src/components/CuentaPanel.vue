@@ -7,10 +7,18 @@ import { subtotalCuenta, unidadesCuenta } from '../utils/cuentas.js'
 
 const props = defineProps({
   mesa: { type: Object, required: true },
-  cuenta: { type: Object, default: null }
+  cuenta: { type: Object, default: null },
+  esBorrador: { type: Boolean, default: false }
 })
 
-defineEmits(['cobrar', 'cancelar'])
+const emit = defineEmits([
+  'cobrar',
+  'cancelar',
+  'pedir',
+  'cambiar-cantidad',
+  'quitar-item',
+  'guardar-nota'
+])
 
 const cuentas = useCuentasStore()
 const menu = useMenuStore()
@@ -20,22 +28,47 @@ const subtotal = computed(() => (props.cuenta ? subtotalCuenta(props.cuenta) : 0
 const unidades = computed(() => (props.cuenta ? unidadesCuenta(props.cuenta) : 0))
 
 const puedeAumentar = (item) => menu.porId(item.productoId)?.disponible === true
-const guardarNota = (item, nota) => cuentas.actualizarNota(props.cuenta.id, item.id, nota)
+
+function cambiarCantidad(item, delta) {
+  if (props.esBorrador) emit('cambiar-cantidad', item, delta)
+  else cuentas.cambiarCantidad(props.cuenta.id, item.id, delta)
+}
+
+function quitarItem(item) {
+  if (props.esBorrador) emit('quitar-item', item)
+  else cuentas.quitarItem(props.cuenta.id, item.id)
+}
+
+function guardarNota(item, nota) {
+  if (props.esBorrador) emit('guardar-nota', item, nota)
+  else cuentas.actualizarNota(props.cuenta.id, item.id, nota)
+}
 </script>
 
 <template>
   <section class="cuenta" aria-labelledby="titulo-cuenta">
     <header class="cuenta__cabecera">
-      <h2 id="titulo-cuenta" class="titulo text-h6 q-my-none">Cuenta de la mesa {{ mesa.numero }}</h2>
-      <div v-if="cuenta" class="text-caption texto-suave">
+      <h2 id="titulo-cuenta" class="titulo text-h6 q-my-none">
+        {{ esBorrador ? 'Pedido de la mesa' : 'Cuenta de la mesa' }} {{ mesa.numero }}
+      </h2>
+      <div v-if="cuenta && !esBorrador" class="text-caption texto-suave">
         Abierta a las {{ formatoHora(cuenta.abiertaAt) }}
+      </div>
+      <div v-else-if="esBorrador" class="text-caption texto-suave">
+        Sin guardar: la mesa sigue libre hasta pedir
       </div>
     </header>
 
     <div v-if="!items.length" class="cuenta__vacia">
       <q-icon name="receipt_long" size="48px" color="grey-6" />
       <p class="text-body1 q-mt-sm q-mb-xs">
-        {{ cuenta ? 'La cuenta no tiene productos' : 'Esta mesa aún no consume' }}
+        {{
+          esBorrador
+            ? 'Aún no agregas productos'
+            : cuenta
+              ? 'La cuenta no tiene productos'
+              : 'Esta mesa aún no consume'
+        }}
       </p>
       <p class="text-body2 texto-suave q-mb-none">Toca un producto del menú para agregarlo.</p>
     </div>
@@ -82,7 +115,7 @@ const guardarNota = (item, nota) => cuentas.actualizarNota(props.cuenta.id, item
               icon="remove"
               :disable="item.cantidad <= 1"
               :aria-label="`Quitar una unidad de ${item.nombre}`"
-              @click="cuentas.cambiarCantidad(cuenta.id, item.id, -1)"
+              @click="cambiarCantidad(item, -1)"
             />
             <span class="cantidad__valor">{{ item.cantidad }}</span>
             <q-btn
@@ -93,7 +126,7 @@ const guardarNota = (item, nota) => cuentas.actualizarNota(props.cuenta.id, item
               icon="add"
               :disable="!puedeAumentar(item)"
               :aria-label="`Agregar una unidad de ${item.nombre}`"
-              @click="cuentas.cambiarCantidad(cuenta.id, item.id, 1)"
+              @click="cambiarCantidad(item, 1)"
             />
           </div>
           <q-btn
@@ -104,7 +137,7 @@ const guardarNota = (item, nota) => cuentas.actualizarNota(props.cuenta.id, item
             icon="delete_outline"
             color="negative"
             :aria-label="`Quitar ${item.nombre} de la cuenta`"
-            @click="cuentas.quitarItem(cuenta.id, item.id)"
+            @click="quitarItem(item)"
           />
         </div>
       </li>
@@ -122,25 +155,40 @@ const guardarNota = (item, nota) => cuentas.actualizarNota(props.cuenta.id, item
       </div>
 
       <q-btn
+        v-if="esBorrador"
         unelevated
         no-caps
         size="lg"
         color="primary"
-        icon="payments"
-        label="Cobrar cuenta"
+        icon="send"
+        label="Pedir"
         class="full-width q-mt-md"
         :disable="!items.length"
-        @click="$emit('cobrar')"
+        @click="$emit('pedir')"
       />
-      <q-btn
-        v-if="cuenta"
-        flat
-        no-caps
-        color="negative"
-        class="full-width q-mt-sm"
-        :label="items.length ? 'Cancelar cuenta' : 'Liberar mesa'"
-        @click="$emit('cancelar')"
-      />
+
+      <template v-else>
+        <q-btn
+          unelevated
+          no-caps
+          size="lg"
+          color="primary"
+          icon="payments"
+          label="Cobrar cuenta"
+          class="full-width q-mt-md"
+          :disable="!items.length"
+          @click="$emit('cobrar')"
+        />
+        <q-btn
+          v-if="cuenta"
+          flat
+          no-caps
+          color="negative"
+          class="full-width q-mt-sm"
+          :label="items.length ? 'Cancelar cuenta' : 'Liberar mesa'"
+          @click="$emit('cancelar')"
+        />
+      </template>
     </footer>
   </section>
 </template>

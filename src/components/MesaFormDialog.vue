@@ -51,7 +51,6 @@ function guardar() {
             type="number"
             outlined
             autofocus
-            min="1"
             label="Número de mesa"
             :rules="reglasNumero"
             lazy-rules
@@ -60,8 +59,6 @@ function guardar() {
             v-model.number="capacidad"
             type="number"
             outlined
-            min="1"
-            max="20"
             label="Capacidad (personas)"
             :rules="reglasCapacidad"
             lazy-rules

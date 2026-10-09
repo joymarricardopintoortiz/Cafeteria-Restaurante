@@ -9,7 +9,7 @@ const props = defineProps({
   ahora: { type: Number, required: true }
 })
 
-const emit = defineEmits(['editar'])
+const emit = defineEmits(['editar', 'cobrar', 'cancelar'])
 
 const ocupada = computed(() => props.cuenta !== null)
 const fueraDeServicio = computed(() => props.mesa.disponibilidad === 'fuera de servicio' && !ocupada.value)
@@ -45,6 +45,28 @@ const descripcion = computed(() =>
             <q-icon :name="ocupada ? 'local_cafe' : 'event_seat'" size="16px" />
             {{ ocupada ? 'Ocupada' : mesa.disponibilidad === 'fuera de servicio' ? 'Fuera de servicio' : 'Libre' }}
           </span>
+          <q-btn
+            v-if="ocupada"
+            flat
+            round
+            dense
+            icon="payments"
+            size="sm"
+            color="positive"
+            :aria-label="`Cobrar cuenta de la mesa ${mesa.numero}`"
+            @click.prevent.stop="emit('cobrar', cuenta)"
+          />
+          <q-btn
+            v-if="ocupada"
+            flat
+            round
+            dense
+            icon="do_not_disturb"
+            size="sm"
+            color="negative"
+            :aria-label="`Cancelar cuenta de la mesa ${mesa.numero}`"
+            @click.prevent.stop="emit('cancelar', cuenta)"
+          />
           <q-btn
             flat
             round

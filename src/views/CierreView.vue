@@ -1,28 +1,61 @@
 <script setup>
 import { useQuasar } from 'quasar'
-import { computed, ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useCuentasStore } from '../stores/cuentas.js'
 import { useCierresStore } from '../stores/cierres.js'
-import { formatoFecha, formatoFechaCorta } from '../utils/format.js'
+import { useCajaStore } from '../stores/caja.js'
+import { formatoFecha, formatoFechaCorta, formatoMoneda } from '../utils/format.js'
 import ResumenJornada from '../components/ResumenJornada.vue'
 
 const $q = useQuasar()
 const cuentas = useCuentasStore()
 const cierres = useCierresStore()
+const caja = useCajaStore()
 
 const pestana = ref('hoy')
 const dialogoCierre = ref(false)
 const observaciones = ref('')
+const contada = ref(null)
+
+const baseCaja = ref(caja.base)
+watch(
+  () => caja.base,
+  (valor) => {
+    baseCaja.value = valor
+  }
+)
+watch(baseCaja, (valor) => {
+  caja.fijarBase(valor)
+})
+
+const reglasBase = [
+  (v) =>
+    (v !== null && v !== '' && Number.isFinite(v) && v >= 0) ||
+    'Ingresa una base mayor o igual a 0'
+]
+
+const reglasContada = [
+  (v) =>
+    (v !== null && v !== '' && Number.isFinite(v) && v >= 0) ||
+    'Ingresa el efectivo contado en caja'
+]
 
 function abrirCierre() {
   observaciones.value = ''
+  contada.value = null
   dialogoCierre.value = true
 }
 
 function confirmarCierre() {
+  const arqueo = caja.arquear(contada.value)
   const registro = cierres.cerrarDia(observaciones.value)
   if (registro) {
-    $q.notify({ type: 'positive', message: 'Día cerrado. El salón quedó listo para mañana.' })
+    let mensaje = 'Día cerrado.'
+    if (arqueo.diferencia === 0) mensaje += ' La caja cuadra.'
+    else if (arqueo.diferencia > 0) mensaje += ` Sobran ${formatoMoneda(arqueo.diferencia)} en caja.`
+    else mensaje += ` Faltan ${formatoMoneda(-arqueo.diferencia)} en caja.`
+    $q.notify({ type: 'positive', message: mensaje })
+    dialogoCierre.value = false
     pestana.value = 'hoy'
   }
 }
@@ -77,6 +110,34 @@ function confirmarCierre() {
 
     <q-tab-panels v-model="pestana" animated class="paneles">
       <q-tab-panel name="hoy" class="q-px-none">
+        <q-card flat bordered class="bloque q-mb-lg">
+          <h3 class="titulo text-h6 q-mt-none q-mb-md">Caja de la jornada</h3>
+          <q-input
+            v-model.number="baseCaja"
+            type="number"
+            outlined
+            dense
+            prefix="$"
+            label="Base de caja (efectivo inicial)"
+            :rules="reglasBase"
+            lazy-rules
+            class="q-mb-md"
+          />
+          <div class="fila-monto q-mt-sm">
+            <span>Efectivo cobrado</span>
+            <span>{{ formatoMoneda(caja.efectivoCobrado) }}</span>
+          </div>
+          <div class="fila-monto q-mt-sm">
+            <span>Cambios entregados</span>
+            <span>{{ formatoMoneda(caja.cambiosEntregados) }}</span>
+          </div>
+          <q-separator class="q-my-sm" />
+          <div class="fila-monto">
+            <span class="text-weight-medium">Efectivo esperado en caja</span>
+            <strong class="text-h6 q-my-none">{{ formatoMoneda(caja.efectivoEsperado) }}</strong>
+          </div>
+        </q-card>
+
         <ResumenJornada :resumen="cierres.resumenActual" :cuentas="cuentas.cerradas" />
       </q-tab-panel>
 
@@ -114,39 +175,51 @@ function confirmarCierre() {
 
     <q-dialog v-model="dialogoCierre" persistent>
       <q-card class="dialogo">
-        <q-card-section>
-          <h2 class="titulo text-h6 q-my-none">Cerrar el día</h2>
-          <p class="text-body2 texto-suave q-mt-sm q-mb-none">
-            Esta acción guarda el resumen de hoy en el historial y deja el salón listo para
-            mañana. No se puede deshacer.
-          </p>
-        </q-card-section>
+        <q-form @submit="confirmarCierre">
+          <q-card-section>
+            <h2 class="titulo text-h6 q-my-none">Cerrar el día</h2>
+            <p class="text-body2 texto-suave q-mt-sm q-mb-none">
+              Esta acción guarda el resumen de hoy en el historial y deja el salón
+              listo para mañana. No se puede deshacer.
+            </p>
+          </q-card-section>
 
-        <q-card-section class="q-pt-none">
-          <q-input
-            v-model="observaciones"
-            outlined
-            type="textarea"
-            rows="3"
-            maxlength="200"
-            counter
-            label="Observaciones"
-            placeholder="Novedades del turno, incidencias, lo que sea útil para mañana"
-          />
-        </q-card-section>
+          <q-card-section class="q-pt-none">
+            <q-input
+              v-model="observaciones"
+              outlined
+              type="textarea"
+              rows="3"
+              maxlength="200"
+              counter
+              label="Observaciones"
+              placeholder="Novedades del turno, incidencias, lo que sea útil para mañana"
+            />
+            <q-input
+              v-model.number="contada"
+              type="number"
+              outlined
+              prefix="$"
+              label="Efectivo contado en caja"
+              :hint="`Esperado en caja: ${formatoMoneda(caja.efectivoEsperado)}`"
+              :rules="reglasContada"
+              lazy-rules
+              class="q-mt-md"
+            />
+          </q-card-section>
 
-        <q-card-actions align="right" class="q-pa-md q-pt-none">
-          <q-btn flat no-caps label="Volver" v-close-popup />
-          <q-btn
-            unelevated
-            no-caps
-            color="primary"
-            icon="task_alt"
-            label="Confirmar cierre"
-            v-close-popup
-            @click="confirmarCierre"
-          />
-        </q-card-actions>
+          <q-card-actions align="right" class="q-pa-md q-pt-none">
+            <q-btn flat no-caps label="Volver" v-close-popup />
+            <q-btn
+              unelevated
+              no-caps
+              color="primary"
+              icon="task_alt"
+              label="Confirmar cierre"
+              type="submit"
+            />
+          </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
   </q-page>

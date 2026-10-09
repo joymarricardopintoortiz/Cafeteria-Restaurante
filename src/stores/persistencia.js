@@ -2,7 +2,8 @@
   mesas: 'cafeteria-mesas',
   menu: 'cafeteria-menu',
   cuentas: 'cafeteria-cuentas',
-  cierres: 'cafeteria-cierres'
+  cierres: 'cafeteria-cierres',
+  caja: 'cafeteria-caja'
 }
 
 export function persistenciaPlugin() {

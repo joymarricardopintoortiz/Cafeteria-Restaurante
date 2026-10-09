@@ -1,4 +1,14 @@
-﻿body {
+﻿:root {
+    --q-primary: #6f4518;
+    --q-secondary: #f6a821;
+    --q-accent: #8b5a2b;
+    --q-positive: #4c9a2a;
+    --q-negative: #d1495b;
+    --q-warning: #e08600;
+    --q-info: #8a7263;
+}
+
+body {
     background: linear-gradient(180deg, #fdf6ec 0%, #f7ead9 100%);
     color: #3a2c22;
     font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
@@ -9,32 +19,8 @@ button, input, textarea, select {
     font-family: inherit;
 }
 
-.bg-primary {
+.q-header.bg-primary {
     background: linear-gradient(135deg, #8b5a2b 0%, #6f4518 100%);
-}
-
-.text-primary {
-    color: #6f4518;
-}
-
-.bg-secondary {
-    background: #f6a821;
-}
-
-.text-secondary {
-    color: #e08600;
-}
-
-.bg-negative {
-    background: #d1495b;
-}
-
-.text-negative {
-    color: #d1495b;
-}
-
-.bg-positive {
-    background: #4c9a2a;
 }
 
 .titulo {
@@ -746,7 +732,6 @@ button, input, textarea, select {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    justify-content: center;
     gap: 12px;
     background: rgba(253, 246, 236, 0.92);
 }
@@ -767,153 +752,155 @@ button, input, textarea, select {
     to   { opacity: 1; transform: translateY(0); }
 }
 
-.logo-taza { filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25)); }
+.logo-taza {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+}
 
 @media (max-width: 900px) {
-  html,
-  body {
-    overflow-x: hidden;
-  }
-  .pagina,
-  .contenido,
-  .columna-menu,
-  .filtros {
-    min-width: 0;
-  }
-  .categorias {
-    overflow-x: auto;
-    max-width: 100%;
-  }
-  .grilla {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  }
-  .grilla-productos {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-  .columnas {
-    grid-template-columns: 1fr;
-  }
-  .indicadores {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  }
-  .indicadores-inicio {
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  }
-  .dialogo {
-    width: 400px;
-  }
+    html,
+    body {
+        overflow-x: hidden;
+    }
+    .pagina,
+    .contenido,
+    .columna-menu,
+    .filtros {
+        min-width: 0;
+    }
+    .categorias {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+    .grilla {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+    .grilla-productos {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    .columnas {
+        grid-template-columns: 1fr;
+    }
+    .indicadores {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    .indicadores-inicio {
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
+    .dialogo {
+        width: 400px;
+    }
 }
 
 @media (max-width: 700px) {
-  .pagina {
-    padding: 16px;
-  }
-  .cabecera {
-    gap: 8px;
-  }
-  .mesa__numero {
-    font-size: 2.5rem;
-  }
-  .cuenta__total {
-    font-size: 1.5rem;
-  }
-  .buscador {
-    max-width: 100%;
-  }
-  .bloque--resumen {
-    height: auto;
-  }
+    .pagina {
+        padding: 16px;
+    }
+    .cabecera {
+        gap: 8px;
+    }
+    .mesa__numero {
+        font-size: 2.5rem;
+    }
+    .cuenta__total {
+        font-size: 1.5rem;
+    }
+    .buscador {
+        max-width: 100%;
+    }
+    .bloque--resumen {
+        height: auto;
+    }
 }
 
 @media (max-width: 600px) {
-  .grilla {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .grilla-productos {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .indicadores {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .indicadores-inicio {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .linea {
-    grid-template-columns: 1fr;
-  }
-  .linea__total {
-    text-align: left;
-  }
-  .dialogo {
-    width: 92vw;
-  }
+    .grilla {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .grilla-productos {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .indicadores {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .indicadores-inicio {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .linea {
+        grid-template-columns: 1fr;
+    }
+    .linea__total {
+        text-align: left;
+    }
+    .dialogo {
+        width: 92vw;
+    }
 }
 
 @media (max-width: 480px) {
-  .pagina {
-    padding: 12px;
-  }
-  .cabecera {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .mesa {
-    min-height: 140px;
-    padding: 12px;
-  }
-  .mesa__numero {
-    font-size: 2rem;
-  }
-  .producto {
-    min-height: 96px;
-    padding: 10px;
-  }
-  .indicador__valor {
-    font-size: 1.4rem;
-  }
-  .total {
-    font-size: 1.6rem;
-  }
+    .pagina {
+        padding: 12px;
+    }
+    .cabecera {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .mesa {
+        min-height: 140px;
+        padding: 12px;
+    }
+    .mesa__numero {
+        font-size: 2rem;
+    }
+    .producto {
+        min-height: 96px;
+        padding: 10px;
+    }
+    .indicador__valor {
+        font-size: 1.4rem;
+    }
+    .total {
+        font-size: 1.6rem;
+    }
 }
 
 @media (max-width: 380px) {
-  .grilla {
-    grid-template-columns: 1fr;
-  }
-  .grilla-productos {
-    grid-template-columns: 1fr;
-  }
-  .indicadores {
-    grid-template-columns: 1fr;
-  }
-  .indicadores-inicio {
-    grid-template-columns: 1fr;
-  }
-  .columnas {
-    gap: 12px;
-  }
-  .dialogo {
-    width: 96vw;
-  }
-  .selector .q-btn__content {
-    font-size: 0.7rem;
-  }
+    .grilla {
+        grid-template-columns: 1fr;
+    }
+    .grilla-productos {
+        grid-template-columns: 1fr;
+    }
+    .indicadores {
+        grid-template-columns: 1fr;
+    }
+    .indicadores-inicio {
+        grid-template-columns: 1fr;
+    }
+    .columnas {
+        gap: 12px;
+    }
+    .dialogo {
+        width: 96vw;
+    }
+    .selector .q-btn__content {
+        font-size: 0.7rem;
+    }
 }
 
 @media (max-width: 300px) {
-  .pagina {
-    padding: 8px;
-  }
-  .mesa__numero {
-    font-size: 1.75rem;
-  }
-  .cuenta__total {
-    font-size: 1.25rem;
-  }
-  .total {
-    font-size: 1.3rem;
-  }
-  .bloque {
-    padding: 12px;
-  }
+    .pagina {
+        padding: 8px;
+    }
+    .mesa__numero {
+        font-size: 1.75rem;
+    }
+    .cuenta__total {
+        font-size: 1.25rem;
+    }
+    .total {
+        font-size: 1.3rem;
+    }
+    .bloque {
+        padding: 12px;
+    }
 }

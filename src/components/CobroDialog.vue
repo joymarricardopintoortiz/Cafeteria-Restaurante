@@ -39,9 +39,21 @@ const total = computed(() => props.subtotal + propina.value)
 const entregado = computed(() => Number(recibido.value) || 0)
 const cambio = computed(() => Math.max(0, entregado.value - total.value))
 const valido = computed(() => metodo.value !== 'efectivo' || entregado.value >= total.value)
-const mostrarError = computed(
-  () => metodo.value === 'efectivo' && entregado.value > 0 && !valido.value
-)
+
+const reglasRecibido = [
+  (v) => (v !== null && v !== '' && Number.isFinite(v)) || 'Ingresa el efectivo recibido',
+  (v) =>
+    Number(v) >= total.value ||
+    `Faltan ${formatoMoneda(total.value - (Number(v) || 0))} para cubrir la cuenta`
+]
+
+const reglasPropina = [
+  (v) =>
+    v === null ||
+    v === '' ||
+    (Number.isFinite(v) && v >= 0) ||
+    'La propina no puede ser negativa'
+]
 
 watch(abierto, (visible) => {
   if (!visible) return
@@ -65,99 +77,100 @@ function confirmar() {
 <template>
   <q-dialog v-model="abierto" persistent>
     <q-card class="dialogo">
-      <q-card-section>
-        <h2 class="titulo text-h6 q-my-none">Cobrar mesa {{ mesaNumero }}</h2>
-      </q-card-section>
+      <q-form @submit="confirmar">
+        <q-card-section>
+          <h2 class="titulo text-h6 q-my-none">Cobrar mesa {{ mesaNumero }}</h2>
+        </q-card-section>
 
-      <q-card-section class="q-pt-none">
-        <div class="fila-monto">
-          <span>Consumo</span>
-          <span>{{ formatoMoneda(subtotal) }}</span>
-        </div>
+        <q-card-section class="q-pt-none">
+          <div class="fila-monto">
+            <span>Consumo</span>
+            <span>{{ formatoMoneda(subtotal) }}</span>
+          </div>
 
-        <div class="text-subtitle2 q-mt-md q-mb-sm">Propina</div>
-        <q-btn-toggle
-          v-model="porcentaje"
-          :options="opcionesPropina"
-          spread
-          no-caps
-          unelevated
-          color="white"
-          text-color="primary"
-          toggle-color="primary"
-          class="selector"
-        />
-        <q-input
-          v-if="porcentaje === -1"
-          v-model.number="propinaOtra"
-          type="number"
-          outlined
-          dense
-          min="0"
-          prefix="$"
-          label="Valor de la propina"
-          class="q-mt-sm"
-        />
-        <div v-if="propina > 0" class="fila-monto q-mt-sm">
-          <span>Propina</span>
-          <span>{{ formatoMoneda(propina) }}</span>
-        </div>
-
-        <div class="text-subtitle2 q-mt-md q-mb-sm">Método de pago</div>
-        <q-btn-toggle
-          v-model="metodo"
-          :options="opcionesMetodo"
-          spread
-          no-caps
-          unelevated
-          color="white"
-          text-color="primary"
-          toggle-color="primary"
-          class="selector"
-        />
-
-        <div v-if="metodo === 'efectivo'" class="q-mt-md">
+          <div class="text-subtitle2 q-mt-md q-mb-sm">Propina</div>
+          <q-btn-toggle
+            v-model="porcentaje"
+            :options="opcionesPropina"
+            spread
+            no-caps
+            unelevated
+            color="white"
+            text-color="primary"
+            toggle-color="primary"
+            class="selector"
+          />
           <q-input
-            v-model.number="recibido"
+            v-if="porcentaje === -1"
+            v-model.number="propinaOtra"
             type="number"
             outlined
-            min="0"
+            dense
             prefix="$"
-            label="Efectivo recibido"
-            :error="mostrarError"
-            error-message="El efectivo recibido no alcanza para pagar la cuenta"
-            :hint="entregado ? '' : 'Escribe cuánto entregó el cliente'"
-          >
-            <template #append>
-              <q-btn flat dense no-caps label="Exacto" @click="recibido = total" />
-            </template>
-          </q-input>
-          <div v-if="valido && entregado" class="fila-monto q-mt-sm">
-            <span>Cambio a devolver</span>
-            <strong>{{ formatoMoneda(cambio) }}</strong>
+            label="Valor de la propina"
+            :rules="reglasPropina"
+            lazy-rules
+            class="q-mt-sm"
+          />
+          <div v-if="propina > 0" class="fila-monto q-mt-sm">
+            <span>Propina</span>
+            <span>{{ formatoMoneda(propina) }}</span>
           </div>
-        </div>
-      </q-card-section>
 
-      <q-separator />
+          <div class="text-subtitle2 q-mt-md q-mb-sm">Método de pago</div>
+          <q-btn-toggle
+            v-model="metodo"
+            :options="opcionesMetodo"
+            spread
+            no-caps
+            unelevated
+            color="white"
+            text-color="primary"
+            toggle-color="primary"
+            class="selector"
+          />
 
-      <q-card-section class="fila-total">
-        <span class="text-subtitle1">Total a cobrar</span>
-        <span class="total">{{ formatoMoneda(total) }}</span>
-      </q-card-section>
+          <div v-if="metodo === 'efectivo'" class="q-mt-md">
+            <q-input
+              v-model.number="recibido"
+              type="number"
+              outlined
+              prefix="$"
+              label="Efectivo recibido"
+              :rules="reglasRecibido"
+              lazy-rules
+              :hint="entregado ? '' : 'Escribe cuánto entregó el cliente'"
+            >
+              <template #append>
+                <q-btn flat dense no-caps label="Exacto" @click="recibido = total" />
+              </template>
+            </q-input>
+            <div v-if="valido && entregado" class="fila-monto q-mt-sm">
+              <span>Cambio a devolver</span>
+              <strong>{{ formatoMoneda(cambio) }}</strong>
+            </div>
+          </div>
+        </q-card-section>
 
-      <q-card-actions align="right" class="q-pa-md q-pt-none">
-        <q-btn flat no-caps label="Volver" v-close-popup />
-        <q-btn
-          unelevated
-          no-caps
-          color="primary"
-          icon="check"
-          label="Confirmar cobro"
-          :disable="!valido"
-          @click="confirmar"
-        />
-      </q-card-actions>
+        <q-separator />
+
+        <q-card-section class="fila-total">
+          <span class="text-subtitle1">Total a cobrar</span>
+          <span class="total">{{ formatoMoneda(total) }}</span>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md q-pt-none">
+          <q-btn flat no-caps label="Volver" v-close-popup />
+          <q-btn
+            unelevated
+            no-caps
+            color="primary"
+            icon="check"
+            label="Confirmar cobro"
+            type="submit"
+          />
+        </q-card-actions>
+      </q-form>
     </q-card>
   </q-dialog>
 </template>

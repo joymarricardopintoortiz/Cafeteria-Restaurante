@@ -5,6 +5,7 @@ import { useQuasar } from 'quasar'
 import { useMesasStore } from '../stores/mesas.js'
 import { useMenuStore } from '../stores/menu.js'
 import { useCuentasStore } from '../stores/cuentas.js'
+import { crearId } from '../utils/id.js'
 import { formatoMoneda } from '../utils/format.js'
 import { iconoCategoria } from '../utils/categorias.js'
 import ProductoCard from '../components/ProductoCard.vue'
@@ -21,6 +22,14 @@ const cuentas = useCuentasStore()
 
 const mesa = computed(() => mesas.porId(props.id))
 const cuenta = computed(() => (mesa.value ? cuentas.cuentaAbiertaDe(mesa.value.id) : null))
+
+// Mesa libre: los productos van a un borrador local que solo se guarda al pedir.
+const borrador = ref([])
+
+const esBorrador = computed(() => !!mesa.value && !cuenta.value)
+const cuentaVisible = computed(() =>
+  cuenta.value ?? (esBorrador.value ? { id: null, items: borrador.value, abiertaAt: null } : null)
+)
 
 const busqueda = ref('')
 const categoriaActiva = ref('todas')
@@ -42,10 +51,50 @@ const productosFiltrados = computed(() => {
 })
 
 const cantidadEnCuenta = (productoId) =>
-  cuenta.value?.items.find((item) => item.productoId === productoId)?.cantidad ?? 0
+  cuentaVisible.value?.items.find((item) => item.productoId === productoId)?.cantidad ?? 0
+
+function agregarAlBorrador(producto) {
+  const existente = borrador.value.find(
+    (item) => item.productoId === producto.id && item.precio === producto.precio
+  )
+  if (existente) existente.cantidad += 1
+  else {
+    borrador.value.push({
+      id: crearId(),
+      productoId: producto.id,
+      nombre: producto.nombre,
+      precio: producto.precio,
+      cantidad: 1,
+      nota: ''
+    })
+  }
+}
 
 function agregarProducto(producto) {
-  cuentas.agregarProducto(mesa.value, producto)
+  if (esBorrador.value) agregarAlBorrador(producto)
+  else cuentas.agregarProducto(mesa.value, producto)
+}
+
+function cambiarCantidadBorrador(item, delta) {
+  const encontrado = borrador.value.find((i) => i.id === item.id)
+  if (encontrado) encontrado.cantidad = Math.max(1, encontrado.cantidad + delta)
+}
+
+function quitarItemBorrador(item) {
+  borrador.value = borrador.value.filter((i) => i.id !== item.id)
+}
+
+function guardarNotaBorrador(item, nota) {
+  const encontrado = borrador.value.find((i) => i.id === item.id)
+  if (encontrado) encontrado.nota = (nota ?? '').trim()
+}
+
+function pedir() {
+  if (!borrador.value.length) return
+  cuentas.guardarCuenta(mesa.value, borrador.value)
+  borrador.value = []
+  $q.notify({ type: 'positive', message: `Pedido guardado. Mesa ${mesa.value.numero} ocupada` })
+  router.push({ name: 'salon' })
 }
 
 function abrirCobro() {
@@ -172,9 +221,14 @@ function cancelarCuenta() {
       <aside class="columna-cuenta">
         <CuentaPanel
           :mesa="mesa"
-          :cuenta="cuenta"
+          :cuenta="cuentaVisible"
+          :es-borrador="esBorrador"
           @cobrar="abrirCobro"
           @cancelar="cancelarCuenta"
+          @pedir="pedir"
+          @cambiar-cantidad="cambiarCantidadBorrador"
+          @quitar-item="quitarItemBorrador"
+          @guardar-nota="guardarNotaBorrador"
         />
       </aside>
     </div>
@@ -182,7 +236,7 @@ function cancelarCuenta() {
     <CobroDialog
       v-model="dialogoCobro"
       :subtotal="cuenta ? cuenta.items.reduce((s, i) => s + i.precio * i.cantidad, 0) : 0"
-      :mesa-numero="mesa.numero"
+      :mesa-numero="mesa?.numero"
       @confirmar="confirmarCobro"
     />
   </q-page>

@@ -57,6 +57,24 @@ export const useCuentasStore = defineStore(
       return true
     }
 
+    function guardarCuenta(mesa, items) {
+      if (!items?.length) return null
+
+      const cuenta = {
+        id: crearId(),
+        mesaId: mesa.id,
+        mesaNumero: mesa.numero,
+        estado: 'abierta',
+        items: items.map((item) => ({ ...item })),
+        abiertaAt: Date.now(),
+        cerradaAt: null,
+        pago: null,
+        motivoCancelacion: ''
+      }
+      cuentas.value.push(cuenta)
+      return cuenta
+    }
+
     function cambiarCantidad(cuentaId, itemId, delta) {
       const item = abiertaPorId(cuentaId)?.items.find((i) => i.id === itemId)
       if (item) item.cantidad = Math.max(1, item.cantidad + delta)
@@ -119,6 +137,7 @@ export const useCuentasStore = defineStore(
       cerradas,
       cuentaAbiertaDe,
       agregarProducto,
+      guardarCuenta,
       cambiarCantidad,
       quitarItem,
       actualizarNota,
