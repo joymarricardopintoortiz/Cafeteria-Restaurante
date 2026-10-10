@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useMesasStore } from '../stores/mesas.js'
 import { useMenuStore } from '../stores/menu.js'
@@ -22,6 +22,50 @@ const cuentas = useCuentasStore()
 
 const mesa = computed(() => mesas.porId(props.id))
 const cuenta = computed(() => (mesa.value ? cuentas.cuentaAbiertaDe(mesa.value.id) : null))
+
+const route = useRoute()
+// La tarjeta de una mesa ocupada ya no es enlace; "Agregar más" entra con esta marca.
+const modoAgregar = computed(() => route.query.agregar === '1')
+
+// Foto de las cantidades al entrar en modo "Agregar más": el botón "−" no puede
+// bajar de lo que ya se había pedido; los productos nuevos tienen piso 1.
+const cantidadesMinimas = ref({})
+
+watch(
+  [() => props.id, modoAgregar],
+  () => {
+    cantidadesMinimas.value =
+      modoAgregar.value && cuenta.value
+        ? Object.fromEntries(cuenta.value.items.map((item) => [item.id, item.cantidad]))
+        : {}
+  },
+  { immediate: true }
+)
+
+// "Pedir" se habilita solo si hay un aumento neto que confirmar en esta sesión.
+const modificadoEnSesion = computed(() => {
+  if (!modoAgregar.value || !cuenta.value) return false
+  return cuenta.value.items.some(
+    (item) => item.cantidad > (cantidadesMinimas.value[item.id] ?? 0)
+  )
+})
+
+// Entrada no autorizada a una mesa ocupada (URL escrita a mano, refresco o
+// enlace guardado): se vuelve al salón con aviso de Quasar. Solo reacciona al
+// id y a la marca "agregar", para no interferir con el guardado del pedido.
+watch(
+  [() => props.id, modoAgregar],
+  () => {
+    if (mesa.value && cuenta.value && !modoAgregar.value) {
+      $q.notify({
+        type: 'warning',
+        message: `La mesa ${mesa.value.numero} está ocupada; cobra o cancela desde el salón.`
+      })
+      router.replace({ name: 'salon' })
+    }
+  },
+  { immediate: true }
+)
 
 // Mesa libre: los productos van a un borrador local que solo se guarda al pedir.
 const borrador = ref([])
@@ -90,6 +134,18 @@ function guardarNotaBorrador(item, nota) {
 }
 
 function pedir() {
+  // Modo "Agregar más": los productos ya entraron solos a la cuenta abierta;
+  // aquí solo se confirma y se vuelve al salón.
+  if (modoAgregar.value && cuenta.value) {
+    if (!modificadoEnSesion.value) return
+    $q.notify({
+      type: 'positive',
+      message: `Pedido agregado a la mesa ${mesa.value.numero}`
+    })
+    router.push({ name: 'salon' })
+    return
+  }
+
   if (!borrador.value.length) return
   cuentas.guardarCuenta(mesa.value, borrador.value)
   borrador.value = []
@@ -166,6 +222,14 @@ function cancelarCuenta() {
     </div>
 
     <div class="contenido">
+      <q-banner v-if="cuenta && modoAgregar" class="aviso q-mb-md" rounded inline-label>
+        <template #avatar>
+          <q-icon name="edit_note" color="primary" />
+        </template>
+        Estás agregando a la cuenta de la mesa {{ mesa.numero }}. Puedes subir y bajar, pero no
+        por debajo de lo que ya se había pedido; eso no se quita. Pulsa Pedir cuando termines.
+      </q-banner>
+
       <section class="columna-menu">
         <div class="filtros">
           <q-input
@@ -223,6 +287,9 @@ function cancelarCuenta() {
           :mesa="mesa"
           :cuenta="cuentaVisible"
           :es-borrador="esBorrador"
+          :modo-agregar="!!cuenta && modoAgregar"
+          :pendiente="modificadoEnSesion"
+          :cantidades-minimas="cantidadesMinimas"
           @cobrar="abrirCobro"
           @cancelar="cancelarCuenta"
           @pedir="pedir"

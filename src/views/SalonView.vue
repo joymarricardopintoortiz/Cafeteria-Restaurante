@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useMesasStore } from '../stores/mesas.js'
 import { useCuentasStore } from '../stores/cuentas.js'
@@ -11,6 +12,7 @@ import MesaFormDialog from '../components/MesaFormDialog.vue'
 import CobroDialog from '../components/CobroDialog.vue'
 
 const $q = useQuasar()
+const router = useRouter()
 const mesas = useMesasStore()
 const cuentas = useCuentasStore()
 const ahora = useAhora()
@@ -56,6 +58,12 @@ function guardarMesa(datos) {
 function cobrarCuenta(cuenta) {
   cuentaEnCobro.value = cuenta
   dialogoCobro.value = true
+}
+
+// Las mesas ocupadas no se abren tocando la tarjeta; este camino explícito
+// entra con la marca "agregar=1" para sumar productos a la cuenta abierta.
+function agregarMas(mesa) {
+  router.push({ name: 'mesa', params: { id: mesa.id }, query: { agregar: '1' } })
 }
 
 function confirmarCobro(datos) {
@@ -121,6 +129,7 @@ function cancelarCuenta(cuenta) {
         @editar="editarMesa"
         @cobrar="cobrarCuenta"
         @cancelar="cancelarCuenta"
+        @agregar-mas="agregarMas"
       />
     </div>
 

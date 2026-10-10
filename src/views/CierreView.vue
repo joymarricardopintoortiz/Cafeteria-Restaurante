@@ -1,6 +1,6 @@
 <script setup>
 import { useQuasar } from 'quasar'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useCuentasStore } from '../stores/cuentas.js'
 import { useCierresStore } from '../stores/cierres.js'
 import { useCajaStore } from '../stores/caja.js'
@@ -17,16 +17,25 @@ const dialogoCierre = ref(false)
 const observaciones = ref('')
 const contada = ref(null)
 
+// El campo solo escribe en el store al salir del foco, para no "pelear" con
+// lo que el usuario está tecleando. Mientras escribe, los cambios externos
+// de la base (arqueo, reinicio) no pisan su texto.
 const baseCaja = ref(caja.base)
+const escribiendoBase = ref(false)
+
 watch(
   () => caja.base,
   (valor) => {
+    if (escribiendoBase.value) return
     baseCaja.value = valor
   }
 )
-watch(baseCaja, (valor) => {
-  caja.fijarBase(valor)
-})
+
+function sincronizarBase() {
+  escribiendoBase.value = false
+  caja.fijarBase(baseCaja.value)
+  baseCaja.value = caja.base
+}
 
 const reglasBase = [
   (v) =>
@@ -40,13 +49,45 @@ const reglasContada = [
     'Ingresa el efectivo contado en caja'
 ]
 
+const diferenciaEnVivo = computed(() => {
+  if (contada.value === null || contada.value === '' || !Number.isFinite(Number(contada.value))) return null
+  return Math.round(Number(contada.value)) - caja.efectivoEsperado
+})
+
+const textoDiferencia = computed(() => {
+  if (diferenciaEnVivo.value === null) return ''
+  if (diferenciaEnVivo.value === 0) return 'La caja cuadra'
+  return diferenciaEnVivo.value > 0
+    ? `Sobran ${formatoMoneda(diferenciaEnVivo.value)} en caja`
+    : `Faltan ${formatoMoneda(-diferenciaEnVivo.value)} en caja`
+})
+
+const claseDiferencia = computed(() =>
+  diferenciaEnVivo.value === 0
+    ? 'text-positive'
+    : diferenciaEnVivo.value > 0
+      ? 'text-warning'
+      : 'text-negative'
+)
+
 function abrirCierre() {
   observaciones.value = ''
   contada.value = null
   dialogoCierre.value = true
 }
 
-function confirmarCierre() {
+function ejecutarCierre() {
+  // Guard: nunca registrar el arqueo (que pone la base en 0) si el cierre
+  // del día no se va a completar realmente.
+  if (!cierres.puedeCerrar) {
+    $q.notify({
+      type: 'warning',
+      message: 'No se puede cerrar el día: cobra o cancela las mesas abiertas y registra al menos una venta.'
+    })
+    dialogoCierre.value = false
+    return
+  }
+
   const arqueo = caja.arquear(contada.value)
   const registro = cierres.cerrarDia(observaciones.value)
   if (registro) {
@@ -58,6 +99,36 @@ function confirmarCierre() {
     dialogoCierre.value = false
     pestana.value = 'hoy'
   }
+}
+
+function confirmarCierre() {
+  const diferencia = diferenciaEnVivo.value ?? 0
+  if (diferencia !== 0) {
+    $q.dialog({
+      title: 'La caja no cuadra',
+      message:
+        diferencia > 0
+          ? `Sobran ${formatoMoneda(diferencia)} en caja. ¿Confirmar el cierre del día de todos modos?`
+          : `Faltan ${formatoMoneda(-diferencia)} en caja. ¿Confirmar el cierre del día de todos modos?`,
+      ok: { flat: true, label: 'Confirmar cierre', color: 'warning' },
+      cancel: { flat: true, label: 'Volver', color: 'primary' }
+    }).onOk(ejecutarCierre)
+    return
+  }
+  ejecutarCierre()
+}
+
+function pedirReinicioCaja() {
+  $q.dialog({
+    title: 'Reiniciar caja',
+    message:
+      'Esto borra la base de la jornada y el historial de arqueos. Las cuentas y los cierres de día no se ven afectados. ¿Continuar?',
+    ok: { flat: true, label: 'Reiniciar', color: 'negative' },
+    cancel: { flat: true, label: 'Volver', color: 'primary' }
+  }).onOk(() => {
+    caja.reiniciar()
+    $q.notify({ type: 'info', message: 'Caja reiniciada' })
+  })
 }
 </script>
 
@@ -122,6 +193,8 @@ function confirmarCierre() {
             :rules="reglasBase"
             lazy-rules
             class="q-mb-md"
+            @focus="escribiendoBase = true"
+            @blur="sincronizarBase"
           />
           <div class="fila-monto q-mt-sm">
             <span>Efectivo cobrado</span>
@@ -135,6 +208,21 @@ function confirmarCierre() {
           <div class="fila-monto">
             <span class="text-weight-medium">Efectivo esperado en caja</span>
             <strong class="text-h6 q-my-none">{{ formatoMoneda(caja.efectivoEsperado) }}</strong>
+          </div>
+          <div class="row items-center justify-between q-mt-md">
+            <span class="text-caption texto-suave">
+              Arqueos registrados: {{ caja.arqueos.length }}
+            </span>
+            <q-btn
+              flat
+              dense
+              no-caps
+              color="negative"
+              icon="restart_alt"
+              label="Reiniciar caja"
+              :disable="caja.base === 0 && !caja.arqueos.length"
+              @click="pedirReinicioCaja"
+            />
           </div>
         </q-card>
 
@@ -206,6 +294,13 @@ function confirmarCierre() {
               lazy-rules
               class="q-mt-md"
             />
+            <div
+              v-if="diferenciaEnVivo !== null"
+              class="text-body2 q-mt-xs"
+              :class="claseDiferencia"
+            >
+              {{ textoDiferencia }}
+            </div>
           </q-card-section>
 
           <q-card-actions align="right" class="q-pa-md q-pt-none">

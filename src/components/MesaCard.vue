@@ -9,7 +9,7 @@ const props = defineProps({
   ahora: { type: Number, required: true }
 })
 
-const emit = defineEmits(['editar', 'cobrar', 'cancelar'])
+const emit = defineEmits(['editar', 'cobrar', 'cancelar', 'agregar-mas'])
 
 const ocupada = computed(() => props.cuenta !== null)
 const fueraDeServicio = computed(() => props.mesa.disponibilidad === 'fuera de servicio' && !ocupada.value)
@@ -28,13 +28,14 @@ const descripcion = computed(() =>
 </script>
 
 <template>
+  <!-- Mesa libre: entra al salón para tomar el pedido -->
   <router-link
-    v-if="!fueraDeServicio || ocupada"
+    v-if="!ocupada && !fueraDeServicio"
     :to="{ name: 'mesa', params: { id: mesa.id } }"
     class="mesa-link"
     :aria-label="descripcion"
   >
-    <article class="mesa" :class="ocupada ? 'mesa--ocupada' : 'mesa--libre'">
+    <article class="mesa mesa--libre">
       <div class="mesa__cabecera">
         <div>
           <div class="mesa__rotulo">Mesa</div>
@@ -42,11 +43,47 @@ const descripcion = computed(() =>
         </div>
         <div class="mesa__acciones-cabecera">
           <span class="estado">
-            <q-icon :name="ocupada ? 'local_cafe' : 'event_seat'" size="16px" />
-            {{ ocupada ? 'Ocupada' : mesa.disponibilidad === 'fuera de servicio' ? 'Fuera de servicio' : 'Libre' }}
+            <q-icon name="event_seat" size="16px" />
+            Libre
           </span>
           <q-btn
-            v-if="ocupada"
+            flat
+            round
+            dense
+            icon="edit"
+            size="sm"
+            color="primary"
+            :aria-label="`Editar mesa ${mesa.numero}`"
+            @click.prevent.stop="emit('editar', mesa)"
+          />
+        </div>
+      </div>
+
+      <div class="mesa__cuerpo">
+        <div class="mesa__detalle">Para {{ mesa.capacidad }} personas</div>
+        <div class="mesa__detalle">Toca para tomar el pedido</div>
+      </div>
+    </article>
+  </router-link>
+
+  <!-- Mesa ocupada: NO se entra; solo cobrar, cancelar o agregar más desde aquí -->
+  <div
+    v-else-if="ocupada"
+    class="mesa-link mesa-link--ocupada"
+    :aria-label="descripcion"
+  >
+    <article class="mesa mesa--ocupada">
+      <div class="mesa__cabecera">
+        <div>
+          <div class="mesa__rotulo">Mesa</div>
+          <div class="mesa__numero">{{ mesa.numero }}</div>
+        </div>
+        <div class="mesa__acciones-cabecera">
+          <span class="estado">
+            <q-icon name="local_cafe" size="16px" />
+            Ocupada
+          </span>
+          <q-btn
             flat
             round
             dense
@@ -57,7 +94,6 @@ const descripcion = computed(() =>
             @click.prevent.stop="emit('cobrar', cuenta)"
           />
           <q-btn
-            v-if="ocupada"
             flat
             round
             dense
@@ -67,34 +103,29 @@ const descripcion = computed(() =>
             :aria-label="`Cancelar cuenta de la mesa ${mesa.numero}`"
             @click.prevent.stop="emit('cancelar', cuenta)"
           />
-          <q-btn
-            flat
-            round
-            dense
-            icon="edit"
-            size="sm"
-            color="primary"
-            :disable="ocupada"
-            :aria-label="`Editar mesa ${mesa.numero}`"
-            @click.prevent.stop="emit('editar', mesa)"
-          />
         </div>
       </div>
 
-      <div v-if="ocupada" class="mesa__cuerpo">
+      <div class="mesa__cuerpo">
         <div class="mesa__total">{{ formatoMoneda(total) }}</div>
         <div class="mesa__detalle">
           {{ unidades ? `${unidades} ${unidades === 1 ? 'producto' : 'productos'}` : 'Sin productos aún' }}
         </div>
         <div class="mesa__detalle">Abierta hace {{ tiempo }}</div>
-      </div>
-
-      <div v-else class="mesa__cuerpo">
-        <div class="mesa__detalle">Para {{ mesa.capacidad }} personas</div>
-        <div class="mesa__detalle">Toca para tomar el pedido</div>
+        <q-btn
+          flat
+          dense
+          no-caps
+          icon="add_shopping_cart"
+          label="Agregar más"
+          color="primary"
+          class="q-mt-xs"
+          :aria-label="`Agregar más productos a la mesa ${mesa.numero}`"
+          @click.prevent.stop="emit('agregar-mas', mesa)"
+        />
       </div>
     </article>
-  </router-link>
+  </div>
 
   <div v-else class="mesa-link mesa-link--bloqueada" :aria-label="descripcion" aria-disabled="true">
     <article class="mesa mesa--fuera">
@@ -115,7 +146,6 @@ const descripcion = computed(() =>
             icon="edit"
             size="sm"
             color="primary"
-            :disable="ocupada"
             :aria-label="`Editar mesa ${mesa.numero}`"
             @click.prevent.stop="emit('editar', mesa)"
           />

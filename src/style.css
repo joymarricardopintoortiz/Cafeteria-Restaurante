@@ -139,6 +139,10 @@ button, input, textarea, select {
     cursor: not-allowed;
 }
 
+.mesa-link--ocupada {
+    cursor: default;
+}
+
 .mesa__cabecera {
     display: flex;
     justify-content: space-between;

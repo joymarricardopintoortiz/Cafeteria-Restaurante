@@ -8,7 +8,10 @@ import { subtotalCuenta, unidadesCuenta } from '../utils/cuentas.js'
 const props = defineProps({
   mesa: { type: Object, required: true },
   cuenta: { type: Object, default: null },
-  esBorrador: { type: Boolean, default: false }
+  esBorrador: { type: Boolean, default: false },
+  modoAgregar: { type: Boolean, default: false },
+  pendiente: { type: Boolean, default: false },
+  cantidadesMinimas: { type: Object, default: null }
 })
 
 const emit = defineEmits([
@@ -28,6 +31,14 @@ const subtotal = computed(() => (props.cuenta ? subtotalCuenta(props.cuenta) : 0
 const unidades = computed(() => (props.cuenta ? unidadesCuenta(props.cuenta) : 0))
 
 const puedeAumentar = (item) => menu.porId(item.productoId)?.disponible === true
+
+// En modo "Agregar más" el "−" no puede bajar de lo que ya se había pedido
+// (piso guardado al entrar); los productos nuevos de esta sesión tienen piso 1.
+const puedeDisminuir = (item) => {
+  if (!props.modoAgregar) return item.cantidad > 1
+  const piso = props.cantidadesMinimas?.[item.id] ?? 1
+  return item.cantidad > piso
+}
 
 function cambiarCantidad(item, delta) {
   if (props.esBorrador) emit('cambiar-cantidad', item, delta)
@@ -113,7 +124,7 @@ function guardarNota(item, nota) {
               dense
               size="sm"
               icon="remove"
-              :disable="item.cantidad <= 1"
+              :disable="!puedeDisminuir(item)"
               :aria-label="`Quitar una unidad de ${item.nombre}`"
               @click="cambiarCantidad(item, -1)"
             />
@@ -130,6 +141,7 @@ function guardarNota(item, nota) {
             />
           </div>
           <q-btn
+            v-if="!modoAgregar"
             flat
             round
             dense
@@ -143,6 +155,13 @@ function guardarNota(item, nota) {
       </li>
     </ul>
 
+    <p
+      v-if="modoAgregar && items.length"
+      class="text-caption texto-suave q-mt-sm q-mb-none"
+    >
+      No puedes bajar de lo ya pedido; eso no se quita.
+    </p>
+
     <footer class="cuenta__pie">
       <div class="row items-baseline justify-between">
         <span class="text-subtitle1">
@@ -155,7 +174,7 @@ function guardarNota(item, nota) {
       </div>
 
       <q-btn
-        v-if="esBorrador"
+        v-if="esBorrador || modoAgregar"
         unelevated
         no-caps
         size="lg"
@@ -163,7 +182,7 @@ function guardarNota(item, nota) {
         icon="send"
         label="Pedir"
         class="full-width q-mt-md"
-        :disable="!items.length"
+        :disable="esBorrador ? !items.length : !pendiente"
         @click="$emit('pedir')"
       />
 
