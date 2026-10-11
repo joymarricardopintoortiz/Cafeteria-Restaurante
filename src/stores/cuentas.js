@@ -1,7 +1,7 @@
 ﻿import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { crearId } from '../utils/id.js'
-import { subtotalCuenta } from '../utils/cuentas.js'
+import { pedidosConfirmados, rondaDe, subtotalCuenta } from '../utils/cuentas.js'
 import { useMesasStore } from './mesas.js'
 
 export const useCuentasStore = defineStore(
@@ -20,7 +20,7 @@ export const useCuentasStore = defineStore(
     const cuentaAbiertaDe = (mesaId) => abiertas.value.find((c) => c.mesaId === mesaId)
     const abiertaPorId = (id) => abiertas.value.find((c) => c.id === id)
 
-    function agregarProducto(mesa, producto) {
+    function agregarProducto(mesa, producto, ronda = 1) {
       if (!producto.disponible) return false
 
       let cuenta = cuentaAbiertaDe(mesa.id)
@@ -39,8 +39,13 @@ export const useCuentasStore = defineStore(
         cuenta = cuentas.value[cuentas.value.length - 1]
       }
 
+      // Solo se acumula dentro del mismo pedido: un producto del pedido 1 que se
+      // vuelve a pedir genera una línea nueva en la ronda en curso.
       const existente = cuenta.items.find(
-        (item) => item.productoId === producto.id && item.precio === producto.precio
+        (item) =>
+          item.productoId === producto.id &&
+          item.precio === producto.precio &&
+          rondaDe(item) === ronda
       )
       if (existente) {
         existente.cantidad += 1
@@ -51,7 +56,8 @@ export const useCuentasStore = defineStore(
           nombre: producto.nombre,
           precio: producto.precio,
           cantidad: 1,
-          nota: ''
+          nota: '',
+          pedido: ronda
         })
       }
       return true
@@ -65,7 +71,8 @@ export const useCuentasStore = defineStore(
         mesaId: mesa.id,
         mesaNumero: mesa.numero,
         estado: 'abierta',
-        items: items.map((item) => ({ ...item })),
+        items: items.map((item) => ({ ...item, pedido: 1 })),
+        pedido: 1,
         abiertaAt: Date.now(),
         cerradaAt: null,
         pago: null,
@@ -73,6 +80,19 @@ export const useCuentasStore = defineStore(
       }
       cuentas.value.push(cuenta)
       return cuenta
+    }
+
+    // Cierra la ronda en curso: esos productos pasan a quedar registrados como
+    // parte de la cuenta de la mesa (el total siempre suma todos los pedidos).
+    function confirmarPedido(cuentaId) {
+      const cuenta = abiertaPorId(cuentaId)
+      if (!cuenta) return false
+
+      const maxima = cuenta.items.reduce((max, item) => Math.max(max, rondaDe(item)), 1)
+      if (maxima <= pedidosConfirmados(cuenta)) return false
+
+      cuenta.pedido = maxima
+      return true
     }
 
     function cambiarCantidad(cuentaId, itemId, delta) {
@@ -138,6 +158,7 @@ export const useCuentasStore = defineStore(
       cuentaAbiertaDe,
       agregarProducto,
       guardarCuenta,
+      confirmarPedido,
       cambiarCantidad,
       quitarItem,
       actualizarNota,

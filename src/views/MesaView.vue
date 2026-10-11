@@ -7,6 +7,7 @@ import { useMenuStore } from '../stores/menu.js'
 import { useCuentasStore } from '../stores/cuentas.js'
 import { crearId } from '../utils/id.js'
 import { formatoMoneda } from '../utils/format.js'
+import { pedidosConfirmados, rondaDe, rondaEnCurso } from '../utils/cuentas.js'
 import { iconoCategoria } from '../utils/categorias.js'
 import ProductoCard from '../components/ProductoCard.vue'
 import CuentaPanel from '../components/CuentaPanel.vue'
@@ -27,26 +28,21 @@ const route = useRoute()
 // La tarjeta de una mesa ocupada ya no es enlace; "Agregar más" entra con esta marca.
 const modoAgregar = computed(() => route.query.agregar === '1')
 
-// Foto de las cantidades al entrar en modo "Agregar más": el botón "−" no puede
-// bajar de lo que ya se había pedido; los productos nuevos tienen piso 1.
-const cantidadesMinimas = ref({})
-
-watch(
-  [() => props.id, modoAgregar],
-  () => {
-    cantidadesMinimas.value =
-      modoAgregar.value && cuenta.value
-        ? Object.fromEntries(cuenta.value.items.map((item) => [item.id, item.cantidad]))
-        : {}
-  },
-  { immediate: true }
+// "Agregar más" trabaja por rondas: lo ya pedido queda solo como resumen
+// plegable y no se edita; la ronda en curso es la que sí se arma y se borra.
+const pedidosConfirmadosCuenta = computed(() =>
+  cuenta.value ? pedidosConfirmados(cuenta.value) : 1
+)
+const rondaActual = computed(() =>
+  cuenta.value ? rondaEnCurso(cuenta.value) : 1
 )
 
-// "Pedir" se habilita solo si hay un aumento neto que confirmar en esta sesión.
+// "Pedir" se habilita si quedan productos de esta ronda sin confirmar
+// (incluye los de una sesión anterior que se abandonó a medias).
 const modificadoEnSesion = computed(() => {
   if (!modoAgregar.value || !cuenta.value) return false
   return cuenta.value.items.some(
-    (item) => item.cantidad > (cantidadesMinimas.value[item.id] ?? 0)
+    (item) => rondaDe(item) > pedidosConfirmadosCuenta.value
   )
 })
 
@@ -94,8 +90,19 @@ const productosFiltrados = computed(() => {
   })
 })
 
-const cantidadEnCuenta = (productoId) =>
-  cuentaVisible.value?.items.find((item) => item.productoId === productoId)?.cantidad ?? 0
+// La burbuja ×N del menú cuenta solo lo de esta ronda en modo "Agregar más";
+// en una mesa libre, lo que lleva el borrador.
+const cantidadEnCuenta = (productoId) => {
+  const items = cuentaVisible.value?.items ?? []
+  const soloRondaActual = modoAgregar.value && !!cuenta.value
+  return items
+    .filter(
+      (item) =>
+        item.productoId === productoId &&
+        (!soloRondaActual || rondaDe(item) === rondaActual.value)
+    )
+    .reduce((suma, item) => suma + item.cantidad, 0)
+}
 
 function agregarAlBorrador(producto) {
   const existente = borrador.value.find(
@@ -116,7 +123,7 @@ function agregarAlBorrador(producto) {
 
 function agregarProducto(producto) {
   if (esBorrador.value) agregarAlBorrador(producto)
-  else cuentas.agregarProducto(mesa.value, producto)
+  else cuentas.agregarProducto(mesa.value, producto, rondaActual.value)
 }
 
 function cambiarCantidadBorrador(item, delta) {
@@ -134,10 +141,11 @@ function guardarNotaBorrador(item, nota) {
 }
 
 function pedir() {
-  // Modo "Agregar más": los productos ya entraron solos a la cuenta abierta;
-  // aquí solo se confirma y se vuelve al salón.
+  // Modo "Agregar más": los productos nuevos ya entraron a la cuenta; aquí se
+  // confirma la ronda (pasa a quedar registrada) y se vuelve al salón.
   if (modoAgregar.value && cuenta.value) {
     if (!modificadoEnSesion.value) return
+    cuentas.confirmarPedido(cuenta.value.id)
     $q.notify({
       type: 'positive',
       message: `Pedido agregado a la mesa ${mesa.value.numero}`
@@ -226,8 +234,9 @@ function cancelarCuenta() {
         <template #avatar>
           <q-icon name="edit_note" color="primary" />
         </template>
-        Estás agregando a la cuenta de la mesa {{ mesa.numero }}. Puedes subir y bajar, pero no
-        por debajo de lo que ya se había pedido; eso no se quita. Pulsa Pedir cuando termines.
+        Agregas productos nuevos a la mesa {{ mesa.numero }}. Lo del pedido anterior solo se
+        muestra resumido y no se modifica; los de este pedido sí puedes borrarlos antes de pulsar
+        Pedir.
       </q-banner>
 
       <section class="columna-menu">
@@ -289,7 +298,7 @@ function cancelarCuenta() {
           :es-borrador="esBorrador"
           :modo-agregar="!!cuenta && modoAgregar"
           :pendiente="modificadoEnSesion"
-          :cantidades-minimas="cantidadesMinimas"
+          :pedidos-confirmados="pedidosConfirmadosCuenta"
           @cobrar="abrirCobro"
           @cancelar="cancelarCuenta"
           @pedir="pedir"

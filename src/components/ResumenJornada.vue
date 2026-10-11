@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { METODOS_PAGO, etiquetaMetodo, subtotalCuenta } from '../utils/cuentas.js'
+import { METODOS_PAGO, etiquetaMetodo, pedidosConfirmados, rondaDe, subtotalCuenta } from '../utils/cuentas.js'
 import { formatoHora, formatoMoneda } from '../utils/format.js'
 
 const props = defineProps({
@@ -11,6 +11,10 @@ const props = defineProps({
 const LIMITE_PRODUCTOS = 8
 
 const vacio = computed(() => props.cuentas.length === 0)
+
+// Si la mesa tuvo más de un pedido, el detalle lo marca línea por línea.
+const variosPedidos = (cuenta) =>
+  pedidosConfirmados(cuenta) > 1 || cuenta.items.some((item) => rondaDe(item) > 1)
 
 const indicadores = computed(() => {
   const r = props.resumen
@@ -137,6 +141,12 @@ const restantes = computed(() => Math.max(0, props.resumen.productos.length - LI
                 <li v-for="item in cuenta.items" :key="item.id">
                   <span>
                     {{ item.cantidad }} × {{ item.nombre }}
+                    <q-badge
+                      v-if="variosPedidos(cuenta)"
+                      class="pedido-chip"
+                      size="sm"
+                      :label="`Pedido ${rondaDe(item)}`"
+                    />
                     <em v-if="item.nota" class="texto-suave">({{ item.nota }})</em>
                   </span>
                   <span>{{ formatoMoneda(item.precio * item.cantidad) }}</span>

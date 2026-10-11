@@ -317,6 +317,58 @@ button, input, textarea, select {
     padding: 32px 8px;
 }
 
+/* Resumen plegable de lo ya pedido en modo "Agregar más" */
+.cuenta__resumen {
+    margin-top: 12px;
+    background: #fbf6ee;
+    border: 1px solid #ead9c2;
+    border-radius: 12px;
+    padding: 0 8px;
+}
+
+.cuenta__resumen-cabecera {
+    font-size: 0.9375rem;
+    min-height: 52px;
+    border-radius: 12px;
+}
+
+.lineas--solo-lectura {
+    padding: 0 8px 4px;
+}
+
+.lineas--solo-lectura .linea {
+    border-bottom: 1px dashed #ead9c2;
+}
+
+.lineas--solo-lectura .linea:last-child {
+    border-bottom: 0;
+}
+
+/* Desglose de pedidos sobre el total en modo "Agregar más" */
+.cuenta__desglose {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: #fbf6ee;
+    border: 1px dashed #ead9c2;
+    border-radius: 12px;
+}
+
+.cuenta__desglose-fila {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.9375rem;
+    color: #6f4518;
+}
+
+.cuenta__desglose-fila span:last-child {
+    font-weight: 600;
+}
+
 .lineas {
     list-style: none;
     margin: 0;
@@ -523,6 +575,12 @@ button, input, textarea, select {
     justify-content: space-between;
     gap: 12px;
     padding: 4px 0;
+}
+
+.pedido-chip {
+    margin-left: 6px;
+    vertical-align: middle;
+    background: #6f4518;
 }
 
 .pago {

@@ -13,6 +13,25 @@ export const subtotalCuenta = (cuenta) =>
 export const unidadesCuenta = (cuenta) =>
     cuenta.items.reduce((suma, item) => suma + item.cantidad, 0)
 
+// Cada línea pertenece a un "pedido" (ronda) de la misma mesa. Las cuentas
+// guardadas antes de existir este campo se tratan como pedido 1.
+export const rondaDe = (item) => item.pedido ?? 1
+
+// Último pedido ya confirmado de la cuenta (también con respaldo antiguo).
+export const pedidosConfirmados = (cuenta) => cuenta?.pedido ?? 1
+
+// Ronda que se está tomando ahora mismo: la siguiente a la confirmada.
+export const rondaEnCurso = (cuenta) => pedidosConfirmados(cuenta) + 1
+
+export const itemsDeRonda = (cuenta, ronda) =>
+    (cuenta?.items ?? []).filter((item) => rondaDe(item) === ronda)
+
+export const itemsDeRondasPrevias = (cuenta) =>
+    (cuenta?.items ?? []).filter((item) => rondaDe(item) <= pedidosConfirmados(cuenta))
+
+export const subtotalRonda = (cuenta, ronda) =>
+    itemsDeRonda(cuenta, ronda).reduce((suma, item) => suma + item.precio * item.cantidad, 0)
+
 export function construirResumen(cuentas) {
     const pagadas = cuentas.filter((cuenta) => cuenta.estado === 'pagada')
     const canceladas = cuentas.filter((cuenta) => cuenta.estado === 'cancelada')
