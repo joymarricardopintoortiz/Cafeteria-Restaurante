@@ -36,12 +36,13 @@ const propina = computed(() =>
     : Math.round((props.subtotal * porcentaje.value) / 100)
 )
 const total = computed(() => props.subtotal + propina.value)
-const entregado = computed(() => Number(recibido.value) || 0)
+const entregado = computed(() => Math.max(0, Number(recibido.value) || 0))
 const cambio = computed(() => Math.max(0, entregado.value - total.value))
 const valido = computed(() => metodo.value !== 'efectivo' || entregado.value >= total.value)
 
 const reglasRecibido = [
   (v) => (v !== null && v !== '' && Number.isFinite(v)) || 'Ingresa el efectivo recibido',
+  (v) => Number(v) >= 0 || 'El efectivo recibido no puede ser negativo',
   (v) =>
     Number(v) >= total.value ||
     `Faltan ${formatoMoneda(total.value - (Number(v) || 0))} para cubrir la cuenta`

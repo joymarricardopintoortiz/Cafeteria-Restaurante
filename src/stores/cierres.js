@@ -11,9 +11,13 @@ export const useCierresStore = defineStore(
         const historial = ref([])
         const jornadaInicio = ref(Date.now())
         const resumenActual = computed(() =>  construirResumen(cuentasStore.cuentas))
-        const puedeCerrar = computed(
-            () => cuentasStore.abiertas.length === 0 && resumenActual.value.cuentasPagadas > 0
-        )
+        // Cerrar exige tener todas las mesas libres y algo registrado hoy:
+        // una venta o, al menos, una cuenta cancelada.
+        const puedeCerrar = computed(() => {
+            if (cuentasStore.abiertas.length > 0) return false
+            const r = resumenActual.value
+            return r.cuentasPagadas > 0 || r.cuentasCanceladas > 0
+        })
 
         function cerrarDia(observaciones = '') {
             if (!puedeCerrar.value) return null

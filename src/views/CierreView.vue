@@ -44,9 +44,11 @@ const reglasBase = [
 ]
 
 const reglasContada = [
-  (v) =>
-    (v !== null && v !== '' && Number.isFinite(v) && v >= 0) ||
-    'Ingresa el efectivo contado en caja'
+  (v) => {
+    if (v === null || v === '' || !Number.isFinite(Number(v)))
+      return 'Ingresa el efectivo contado en caja'
+    return Number(v) >= 0 || 'El efectivo contado no puede ser negativo'
+  }
 ]
 
 const diferenciaEnVivo = computed(() => {
@@ -82,7 +84,9 @@ function ejecutarCierre() {
   if (!cierres.puedeCerrar) {
     $q.notify({
       type: 'warning',
-      message: 'No se puede cerrar el día: cobra o cancela las mesas abiertas y registra al menos una venta.'
+      message: cuentas.abiertas.length
+        ? 'No se puede cerrar el día: cobra o cancela las mesas abiertas.'
+        : 'No se puede cerrar el día: registra al menos una venta o cancela una cuenta.'
     })
     dialogoCierre.value = false
     return
@@ -110,6 +114,7 @@ function confirmarCierre() {
         diferencia > 0
           ? `Sobran ${formatoMoneda(diferencia)} en caja. ¿Confirmar el cierre del día de todos modos?`
           : `Faltan ${formatoMoneda(-diferencia)} en caja. ¿Confirmar el cierre del día de todos modos?`,
+      persistent: true,
       ok: { flat: true, label: 'Confirmar cierre', color: 'warning' },
       cancel: { flat: true, label: 'Volver', color: 'primary' }
     }).onOk(ejecutarCierre)
@@ -123,6 +128,7 @@ function pedirReinicioCaja() {
     title: 'Reiniciar caja',
     message:
       'Esto borra la base de la jornada y el historial de arqueos. Las cuentas y los cierres de día no se ven afectados. ¿Continuar?',
+    persistent: true,
     ok: { flat: true, label: 'Reiniciar', color: 'negative' },
     cancel: { flat: true, label: 'Volver', color: 'primary' }
   }).onOk(() => {
@@ -161,8 +167,8 @@ function pedirReinicioCaja() {
         antes de cerrar el día.
       </template>
       <template v-else>
-        Todavía no se ha cobrado ninguna cuenta hoy. Registra al menos una venta antes de cerrar
-        el día.
+        Todavía no ha habido ninguna venta ni cancelación hoy. Registra al menos una venta o
+        cancela una cuenta para poder cerrar el día.
       </template>
     </q-banner>
 
