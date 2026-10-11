@@ -33,8 +33,11 @@ export const useMenuStore = defineStore(
 
         const porId = (id) => productos.value.find((p) => p.id === id)
 
+        // Entra al inicio: lo recién creado aparece primero en la tabla del
+        // Menú, en las tarjetas al tomar pedido y, por arrastre, su categoría
+        // nueva encabeza el select y las pestañas (orden de primera aparición).
         function agregar(datos) {
-            productos.value.push({ id: crearId(), ...datos })
+            productos.value.unshift({ id: crearId(), ...datos })
         }
 
         function actualizar(id, datos) {
