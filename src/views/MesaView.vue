@@ -1,11 +1,10 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useMesasStore } from '../stores/mesas.js'
 import { useMenuStore } from '../stores/menu.js'
 import { useCuentasStore } from '../stores/cuentas.js'
-import { crearId } from '../utils/id.js'
 import { formatoMoneda } from '../utils/format.js'
 import { pedidosConfirmados, rondaDe, rondaEnCurso } from '../utils/cuentas.js'
 import { iconoCategoria } from '../utils/categorias.js'
@@ -46,25 +45,10 @@ const modificadoEnSesion = computed(() => {
   )
 })
 
-// Entrada no autorizada a una mesa ocupada (URL escrita a mano, refresco o
-// enlace guardado): se vuelve al salón con aviso de Quasar. Solo reacciona al
-// id y a la marca "agregar", para no interferir con el guardado del pedido.
-watch(
-  [() => props.id, modoAgregar],
-  () => {
-    if (mesa.value && cuenta.value && !modoAgregar.value) {
-      $q.notify({
-        type: 'warning',
-        message: `La mesa ${mesa.value.numero} está ocupada; cobra o cancela desde el salón.`
-      })
-      router.replace({ name: 'salon' })
-    }
-  },
-  { immediate: true }
-)
-
-// Mesa libre: los productos van a un borrador local que solo se guarda al pedir.
-const borrador = ref([])
+// Mesa libre: los productos van al borrador del store (se escribe en
+// cafeteria-cuentas), así que un refresco no los borra; solo se convierten en
+// cuenta cuando se pulsa Pedir.
+const borrador = computed(() => (mesa.value ? cuentas.borradorDe(mesa.value.id) : []))
 
 const esBorrador = computed(() => !!mesa.value && !cuenta.value)
 const cuentaVisible = computed(() =>
@@ -105,20 +89,7 @@ const cantidadEnCuenta = (productoId) => {
 }
 
 function agregarAlBorrador(producto) {
-  const existente = borrador.value.find(
-    (item) => item.productoId === producto.id && item.precio === producto.precio
-  )
-  if (existente) existente.cantidad += 1
-  else {
-    borrador.value.push({
-      id: crearId(),
-      productoId: producto.id,
-      nombre: producto.nombre,
-      precio: producto.precio,
-      cantidad: 1,
-      nota: ''
-    })
-  }
+  cuentas.agregarAlBorrador(mesa.value.id, producto)
 }
 
 function agregarProducto(producto) {
@@ -127,17 +98,15 @@ function agregarProducto(producto) {
 }
 
 function cambiarCantidadBorrador(item, delta) {
-  const encontrado = borrador.value.find((i) => i.id === item.id)
-  if (encontrado) encontrado.cantidad = Math.max(1, encontrado.cantidad + delta)
+  cuentas.cambiarCantidadBorrador(mesa.value.id, item.id, delta)
 }
 
 function quitarItemBorrador(item) {
-  borrador.value = borrador.value.filter((i) => i.id !== item.id)
+  cuentas.quitarItemBorrador(mesa.value.id, item.id)
 }
 
 function guardarNotaBorrador(item, nota) {
-  const encontrado = borrador.value.find((i) => i.id === item.id)
-  if (encontrado) encontrado.nota = (nota ?? '').trim()
+  cuentas.guardarNotaBorrador(mesa.value.id, item.id, nota)
 }
 
 function pedir() {
@@ -155,8 +124,8 @@ function pedir() {
   }
 
   if (!borrador.value.length) return
+  // El store guarda la cuenta y retira el borrador de esa mesa.
   cuentas.guardarCuenta(mesa.value, borrador.value)
-  borrador.value = []
   $q.notify({ type: 'positive', message: `Pedido guardado. Mesa ${mesa.value.numero} ocupada` })
   router.push({ name: 'salon' })
 }

@@ -100,6 +100,8 @@ function ejecutarCierre() {
     else if (arqueo.diferencia > 0) mensaje += ` Sobran ${formatoMoneda(arqueo.diferencia)} en caja.`
     else mensaje += ` Faltan ${formatoMoneda(-arqueo.diferencia)} en caja.`
     $q.notify({ type: 'positive', message: mensaje })
+    // El día nuevo arranca limpio: base 0 y sin arrastrar los arqueos de ayer.
+    caja.reiniciar()
     dialogoCierre.value = false
     pestana.value = 'hoy'
   }

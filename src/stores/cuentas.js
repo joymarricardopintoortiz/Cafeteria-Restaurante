@@ -9,6 +9,11 @@ export const useCuentasStore = defineStore(
   () => {
     const cuentas = ref([])
 
+    // Pedidos armados en una mesa libre que todavía no se pidieron. Viven aquí
+    // (y salen hacia localStorage por persistencia.js) para que un refresco no
+    // los borre: solo desaparecen cuando la mesa pasa a tener cuenta.
+    const borradores = ref({})
+
     const mesasStore = useMesasStore()
     const abiertas = computed(() =>
       cuentas.value.filter((c) => c.estado === 'abierta' && mesasStore.porId(c.mesaId))
@@ -19,6 +24,57 @@ export const useCuentasStore = defineStore(
 
     const cuentaAbiertaDe = (mesaId) => abiertas.value.find((c) => c.mesaId === mesaId)
     const abiertaPorId = (id) => abiertas.value.find((c) => c.id === id)
+
+    // ---------- borrador de mesa libre (se guarda solo) ----------
+    const borradorDe = (mesaId) => borradores.value[mesaId] ?? []
+
+    function agregarAlBorrador(mesaId, producto) {
+      if (!producto.disponible) return false
+
+      let items = borradores.value[mesaId]
+      if (!items) {
+        items = []
+        borradores.value[mesaId] = items
+      }
+
+      const existente = items.find(
+        (item) => item.productoId === producto.id && item.precio === producto.precio
+      )
+      if (existente) existente.cantidad += 1
+      else {
+        items.push({
+          id: crearId(),
+          productoId: producto.id,
+          nombre: producto.nombre,
+          precio: producto.precio,
+          cantidad: 1,
+          nota: ''
+        })
+      }
+      return true
+    }
+
+    function cambiarCantidadBorrador(mesaId, itemId, delta) {
+      const item = borradorDe(mesaId).find((i) => i.id === itemId)
+      if (item) item.cantidad = Math.max(1, item.cantidad + delta)
+    }
+
+    function quitarItemBorrador(mesaId, itemId) {
+      const items = borradores.value[mesaId]
+      if (!items) return
+      const restantes = items.filter((i) => i.id !== itemId)
+      if (restantes.length) borradores.value[mesaId] = restantes
+      else delete borradores.value[mesaId]
+    }
+
+    function guardarNotaBorrador(mesaId, itemId, nota) {
+      const item = borradorDe(mesaId).find((i) => i.id === itemId)
+      if (item) item.nota = (nota ?? '').trim()
+    }
+
+    function borrarBorrador(mesaId) {
+      delete borradores.value[mesaId]
+    }
 
     function agregarProducto(mesa, producto, ronda = 1) {
       if (!producto.disponible) return false
@@ -37,6 +93,14 @@ export const useCuentasStore = defineStore(
           motivoCancelacion: ''
         })
         cuenta = cuentas.value[cuentas.value.length - 1]
+
+        // Si quedaba un borrador sin pedir para esta mesa, entra a la cuenta
+        // en lugar de perderse.
+        const pendiente = borradores.value[mesa.id]
+        if (pendiente?.length) {
+          cuenta.items.push(...pendiente.map((item) => ({ ...item, pedido: ronda })))
+          borrarBorrador(mesa.id)
+        }
       }
 
       // Solo se acumula dentro del mismo pedido: un producto del pedido 1 que se
@@ -79,6 +143,8 @@ export const useCuentasStore = defineStore(
         motivoCancelacion: ''
       }
       cuentas.value.push(cuenta)
+      // El pedido ya quedó registrado: el borrador de esa mesa se retira.
+      borrarBorrador(mesa.id)
       return cuenta
     }
 
@@ -149,13 +215,21 @@ export const useCuentasStore = defineStore(
 
     function reiniciar() {
       cuentas.value = []
+      borradores.value = {}
     }
 
     return {
       cuentas,
+      borradores,
       abiertas,
       cerradas,
       cuentaAbiertaDe,
+      borradorDe,
+      agregarAlBorrador,
+      cambiarCantidadBorrador,
+      quitarItemBorrador,
+      guardarNotaBorrador,
+      borrarBorrador,
       agregarProducto,
       guardarCuenta,
       confirmarPedido,
@@ -168,4 +242,3 @@ export const useCuentasStore = defineStore(
     }
   }
 )
-
