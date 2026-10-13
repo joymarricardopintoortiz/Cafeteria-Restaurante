@@ -689,7 +689,7 @@ button, input, textarea, select {
 .bloque--resumen {
     display: flex;
     flex-direction: column;
-    height: 220px;
+    min-height: 220px;
 }
 
 .bloque--resumen .metodos, .bloque--resumen .vendidos {
