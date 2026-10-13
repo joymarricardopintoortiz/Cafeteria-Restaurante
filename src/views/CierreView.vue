@@ -203,9 +203,6 @@ function pedirReinicioCaja() {
       </template>
       La jornada de hoy ya está cerrada. El cierre se hace una sola vez al día;
       podrás cerrar de nuevo mañana.
-      <template #action>
-        <q-btn flat color="primary" no-caps label="Ver historial" @click="pestana = 'historial'" />
-      </template>
     </q-banner>
 
     <q-tabs

@@ -689,7 +689,15 @@ button, input, textarea, select {
 .bloque--resumen {
     display: flex;
     flex-direction: column;
-    min-height: 220px;
+    height: 220px;
+}
+
+/* Solo el bloque "Cuadre de caja" (el único con un dl.pago hijo directo)
+   crece con su contenido, para que la fila "Diferencia" no quede pegada
+   a la línea inferior de la tarjeta. El resto conserva la altura fija
+   para que las listas laterales midan igual y hagan scroll vertical. */
+.bloque--resumen:has(> .pago) {
+    height: auto;
 }
 
 .bloque--resumen .metodos, .bloque--resumen .vendidos {
