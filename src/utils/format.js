@@ -22,6 +22,18 @@ export const formatoFecha = (ms) => {
 export const formatoFechaCorta = (ms) =>
     new Date(ms).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })
 
+// Compara solo el día calendario en hora local: sirve para reglas como
+// "un solo cierre por día" aunque haya pasado la medianoche entre operaciones.
+export const esMismoDia = (msA, msB) => {
+    const a = new Date(msA)
+    const b = new Date(msB)
+    return (
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+    )
+}
+
 export const minutosDesde = (ms, ahora = Date.now()) =>
     Math.max(0, Math.floor((ahora - ms) / 60000))
 

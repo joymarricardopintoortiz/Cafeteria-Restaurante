@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { useCuentasStore } from '../stores/cuentas.js'
 import { useCierresStore } from '../stores/cierres.js'
 import { useCajaStore } from '../stores/caja.js'
-import { formatoFecha, formatoFechaCorta, formatoMoneda } from '../utils/format.js'
+import { formatoFecha, formatoFechaCorta, formatoMoneda, esMismoDia } from '../utils/format.js'
 import ResumenJornada from '../components/ResumenJornada.vue'
 
 const $q = useQuasar()
@@ -91,15 +91,22 @@ function colorCaja(cajaDia) {
   return cajaDia.diferencia > 0 ? 'warning' : 'negative'
 }
 
+// Marca en el historial el día que se acaba de cerrar (el de hoy).
+function esHoy(ms) {
+  return esMismoDia(ms, Date.now())
+}
+
 function ejecutarCierre() {
   // Guard: nunca registrar el arqueo (que pone la base en 0) si el cierre
   // del día no se va a completar realmente.
   if (!cierres.puedeCerrar) {
     $q.notify({
       type: 'warning',
-      message: cuentas.abiertas.length
-        ? 'No se puede cerrar el día: cobra o cancela las mesas abiertas.'
-        : 'No se puede cerrar el día: registra al menos una venta o cancela una cuenta.'
+      message: cierres.cerradoHoy
+        ? 'La jornada de hoy ya está cerrada. Podrás cerrar de nuevo mañana.'
+        : cuentas.abiertas.length
+          ? 'No se puede cerrar el día: cobra o cancela las mesas abiertas.'
+          : 'No se puede cerrar el día: registra al menos una venta o cancela una cuenta.'
     })
     dialogoCierre.value = false
     return
@@ -117,7 +124,9 @@ function ejecutarCierre() {
     // en el contador hasta que el usuario pida un reinicio manual.
     caja.nuevaJornada()
     dialogoCierre.value = false
-    pestana.value = 'hoy'
+    // El día ya quedó cerrado: la vista va directo al historial, donde el
+    // registro nuevo espera arriba del todo.
+    pestana.value = 'historial'
   }
 }
 
@@ -173,7 +182,7 @@ function pedirReinicioCaja() {
       />
     </div>
 
-    <q-banner v-if="!cierres.puedeCerrar" class="aviso q-mb-lg" rounded>
+    <q-banner v-if="!cierres.puedeCerrar && !cierres.cerradoHoy" class="aviso q-mb-lg" rounded>
       <template #avatar>
         <q-icon name="info" color="warning" />
       </template>
@@ -185,6 +194,17 @@ function pedirReinicioCaja() {
       <template v-else>
         Todavía no ha habido ninguna venta ni cancelación hoy. Registra al menos una venta o
         cancela una cuenta para poder cerrar el día.
+      </template>
+    </q-banner>
+
+    <q-banner v-if="cierres.cerradoHoy" class="aviso q-mb-lg" rounded>
+      <template #avatar>
+        <q-icon name="lock" color="warning" />
+      </template>
+      La jornada de hoy ya está cerrada. El cierre se hace una sola vez al día;
+      podrás cerrar de nuevo mañana.
+      <template #action>
+        <q-btn flat color="primary" no-caps label="Ver historial" @click="pestana = 'historial'" />
       </template>
     </q-banner>
 
@@ -264,7 +284,12 @@ function pedirReinicioCaja() {
           <q-expansion-item v-for="dia in cierres.historial" :key="dia.id" expand-separator>
             <template #header>
               <q-item-section>
-                <q-item-label class="text-weight-medium">{{ formatoFechaCorta(dia.cierre) }}</q-item-label>
+                <q-item-label class="text-weight-medium">
+                  {{ formatoFechaCorta(dia.cierre) }}
+                  <q-badge v-if="esHoy(dia.cierre)" color="primary" class="q-ml-xs">
+                    <q-icon name="lock" size="12px" class="q-mr-xs" /> Hoy · cerrado
+                  </q-badge>
+                </q-item-label>
                 <q-item-label caption>
                   {{ dia.resumen.cuentasPagadas }} cuentas cobradas
                   <span v-if="dia.observaciones"> · {{ dia.observaciones }}</span>
