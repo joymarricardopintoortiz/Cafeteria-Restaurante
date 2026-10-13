@@ -78,6 +78,19 @@ function abrirCierre() {
   dialogoCierre.value = true
 }
 
+// Resultado del cuadre de caja de un día cerrado para el badge del historial;
+// el desglose (inicial, contado, diferencia) lo pinta ResumenJornada.
+function textoCaja(cajaDia) {
+  if (cajaDia.diferencia === 0) return 'Caja cuadrada'
+  if (cajaDia.diferencia > 0) return `Sobraron ${formatoMoneda(cajaDia.diferencia)}`
+  return `Faltaron ${formatoMoneda(-cajaDia.diferencia)}`
+}
+
+function colorCaja(cajaDia) {
+  if (cajaDia.diferencia === 0) return 'positive'
+  return cajaDia.diferencia > 0 ? 'warning' : 'negative'
+}
+
 function ejecutarCierre() {
   // Guard: nunca registrar el arqueo (que pone la base en 0) si el cierre
   // del día no se va a completar realmente.
@@ -93,15 +106,16 @@ function ejecutarCierre() {
   }
 
   const arqueo = caja.arquear(contada.value)
-  const registro = cierres.cerrarDia(observaciones.value)
+  const registro = cierres.cerrarDia(observaciones.value, arqueo)
   if (registro) {
     let mensaje = 'Día cerrado.'
     if (arqueo.diferencia === 0) mensaje += ' La caja cuadra.'
     else if (arqueo.diferencia > 0) mensaje += ` Sobran ${formatoMoneda(arqueo.diferencia)} en caja.`
     else mensaje += ` Faltan ${formatoMoneda(-arqueo.diferencia)} en caja.`
     $q.notify({ type: 'positive', message: mensaje })
-    // El día nuevo arranca limpio: base 0 y sin arrastrar los arqueos de ayer.
-    caja.reiniciar()
+    // El día nuevo arranca con base 0, pero los arqueos registrados quedan
+    // en el contador hasta que el usuario pida un reinicio manual.
+    caja.nuevaJornada()
     dialogoCierre.value = false
     pestana.value = 'hoy'
   }
@@ -257,12 +271,15 @@ function pedirReinicioCaja() {
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
-                <span class="text-weight-bold">{{ new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(dia.resumen.totalCobrado) }}</span>
+                <div class="column items-end q-gutter-xs">
+                  <span class="text-weight-bold">{{ new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(dia.resumen.totalCobrado) }}</span>
+                  <q-badge v-if="dia.caja" :color="colorCaja(dia.caja)" :label="textoCaja(dia.caja)" />
+                </div>
               </q-item-section>
             </template>
 
             <div class="q-pa-md">
-              <ResumenJornada :resumen="dia.resumen" :cuentas="dia.cuentas" />
+              <ResumenJornada :resumen="dia.resumen" :cuentas="dia.cuentas" :caja="dia.caja" />
             </div>
           </q-expansion-item>
         </q-list>

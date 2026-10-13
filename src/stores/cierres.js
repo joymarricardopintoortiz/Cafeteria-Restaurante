@@ -19,7 +19,9 @@ export const useCierresStore = defineStore(
             return r.cuentasPagadas > 0 || r.cuentasCanceladas > 0
         })
 
-        function cerrarDia(observaciones = '') {
+        // El arqueo de la jornada queda guardado en el registro del día para que
+        // el cuadre de caja sea auditable después (los días viejos no lo traen).
+        function cerrarDia(observaciones = '', caja = null) {
             if (!puedeCerrar.value) return null
 
             const registro = {
@@ -28,7 +30,17 @@ export const useCierresStore = defineStore(
                 cierre: Date.now(),
                 observaciones: observaciones.trim(),
                 resumen: construirResumen(cuentasStore.cuentas),
-                cuentas: JSON.parse(JSON.stringify(cuentasStore.cerradas))
+                cuentas: JSON.parse(JSON.stringify(cuentasStore.cerradas)),
+                caja: caja
+                    ? {
+                          base: caja.base,
+                          efectivoCobrado: caja.efectivoCobrado,
+                          cambiosEntregados: caja.cambiosEntregados,
+                          esperado: caja.esperado,
+                          contada: caja.contada,
+                          diferencia: caja.diferencia
+                      }
+                    : null
             }
 
             historial.value.unshift(registro)

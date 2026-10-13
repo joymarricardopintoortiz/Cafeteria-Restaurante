@@ -5,7 +5,10 @@ import { formatoHora, formatoMoneda } from '../utils/format.js'
 
 const props = defineProps({
   resumen: { type: Object, required: true },
-  cuentas: { type: Array, default: () => [] }
+  cuentas: { type: Array, default: () => [] },
+  // Solo la pestaña de historial la pasa: trae el arqueo del día cerrado
+  // (efectivo inicial, contado, esperado y diferencia).
+  caja: { type: Object, default: null }
 })
 
 const LIMITE_PRODUCTOS = 8
@@ -18,7 +21,7 @@ const variosPedidos = (cuenta) =>
 
 const indicadores = computed(() => {
   const r = props.resumen
-  return [
+  const datos = [
     {
       etiqueta: 'Total cobrado',
       valor: formatoMoneda(r.totalCobrado),
@@ -37,6 +40,50 @@ const indicadores = computed(() => {
       nota: `${formatoMoneda(r.valorCancelado)} sin cobrar`
     }
   ]
+
+  const cajaDia = props.caja
+  if (cajaDia && Number.isFinite(cajaDia.base)) {
+    datos.push({
+      etiqueta: 'Efectivo inicial',
+      valor: formatoMoneda(cajaDia.base),
+      nota: 'Base de caja al abrir'
+    })
+  }
+  if (cajaDia && Number.isFinite(cajaDia.contada)) {
+    datos.push({
+      etiqueta: 'Efectivo contado',
+      valor: formatoMoneda(cajaDia.contada),
+      nota: 'Conteo real al cerrar'
+    })
+  }
+  return datos
+})
+
+// Filas del cuadre de caja del día cerrado. Los días viejos no traen todos
+// los campos, así que solo se pinta lo que exista.
+const filasCaja = computed(() => {
+  const c = props.caja
+  if (!c) return []
+  const filas = []
+  if (Number.isFinite(c.base)) filas.push({ etiqueta: 'Efectivo inicial', valor: formatoMoneda(c.base) })
+  if (Number.isFinite(c.efectivoCobrado))
+    filas.push({ etiqueta: 'Efectivo cobrado en efectivo', valor: formatoMoneda(c.efectivoCobrado) })
+  if (Number.isFinite(c.cambiosEntregados))
+    filas.push({ etiqueta: 'Cambios entregados', valor: formatoMoneda(c.cambiosEntregados) })
+  if (Number.isFinite(c.esperado))
+    filas.push({ etiqueta: 'Efectivo esperado en caja', valor: formatoMoneda(c.esperado) })
+  if (Number.isFinite(c.contada))
+    filas.push({ etiqueta: 'Efectivo contado en caja', valor: formatoMoneda(c.contada) })
+  return filas
+})
+
+const diferenciaCaja = computed(() => {
+  const c = props.caja
+  if (!c || !Number.isFinite(c.diferencia)) return null
+  if (c.diferencia === 0) return { texto: 'La caja cuadra', clase: 'text-positive' }
+  return c.diferencia > 0
+    ? { texto: `Sobraron ${formatoMoneda(c.diferencia)}`, clase: 'text-warning' }
+    : { texto: `Faltaron ${formatoMoneda(-c.diferencia)}`, clase: 'text-negative' }
 })
 
 const metodos = computed(() =>
@@ -74,6 +121,22 @@ const restantes = computed(() => Math.max(0, props.resumen.productos.length - LI
           <dd class="indicador__nota">{{ dato.nota }}</dd>
         </div>
       </dl>
+
+      <section v-if="filasCaja.length" class="bloque bloque--resumen q-mb-lg">
+        <h3 class="titulo text-h6 q-mt-none q-mb-md">Cuadre de caja</h3>
+        <dl class="pago">
+          <div v-for="fila in filasCaja" :key="fila.etiqueta">
+            <dt>{{ fila.etiqueta }}</dt>
+            <dd>{{ fila.valor }}</dd>
+          </div>
+          <div v-if="diferenciaCaja">
+            <dt>Diferencia</dt>
+            <dd :class="diferenciaCaja.clase">
+              <strong>{{ diferenciaCaja.texto }}</strong>
+            </dd>
+          </div>
+        </dl>
+      </section>
 
       <div class="columnas">
         <section class="bloque bloque--resumen">

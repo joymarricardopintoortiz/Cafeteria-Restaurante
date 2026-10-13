@@ -47,6 +47,13 @@ export const useCajaStore = defineStore(
       return registro
     }
 
+    // Al cerrar el día la base arranca en 0, pero los arqueos ya registrados
+    // se conservan (quedan en el historial del día y en este contador) hasta
+    // que el usuario pida un reinicio manual.
+    function nuevaJornada() {
+      base.value = 0
+    }
+
     function reiniciar() {
       base.value = 0
       arqueos.value = []
@@ -60,6 +67,7 @@ export const useCajaStore = defineStore(
       efectivoEsperado,
       fijarBase,
       arquear,
+      nuevaJornada,
       reiniciar
     }
   }
